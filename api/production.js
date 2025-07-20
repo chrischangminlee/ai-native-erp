@@ -1,6 +1,6 @@
-import { getDb } from './_lib/db.js';
-import { getDateRange, calculatePercentage } from './_lib/helpers.js';
-import './_lib/init-db.js';
+import { getDb } from '../lib/db.js';
+import { getDateRange, calculatePercentage } from '../lib/helpers.js';
+import '../lib/init-db.js';
 
 async function getOutput(req, res) {
   const db = getDb();

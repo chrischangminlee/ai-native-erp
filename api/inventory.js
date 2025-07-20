@@ -1,7 +1,7 @@
-import { getDb } from './_lib/db.js';
-import { getDateRange, calculatePercentage } from './_lib/helpers.js';
+import { getDb } from '../lib/db.js';
+import { getDateRange, calculatePercentage } from '../lib/helpers.js';
 import { format, addDays } from 'date-fns';
-import './_lib/init-db.js';
+import '../lib/init-db.js';
 
 async function getDashboard(req, res) {
   const db = getDb();
