@@ -1,21 +1,38 @@
 {
-  "name": "manufacturing-erp-demo",
-  "version": "1.0.0",
-  "description": "Lightweight manufacturing-oriented ERP demo",
+  "name": "ai-native-erp",
+  "description": "Manufacturing ERP demo with AI-ready REST endpoints",
   "private": true,
-  "workspaces": [
-    "backend",
-    "frontend"
-  ],
+  "version": "1.0.0",
+  "type": "module",
   "scripts": {
-    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
-    "dev:backend": "npm --workspace=backend run dev",
-    "dev:frontend": "npm --workspace=frontend run dev",
-    "build": "npm run build:backend && npm run build:frontend",
-    "build:backend": "npm --workspace=backend run build",
-    "build:frontend": "npm --workspace=frontend run build"
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "eslint .",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.22.3",
+    "axios": "^1.6.8",
+    "recharts": "^2.12.5",
+    "lucide-react": "^0.372.0",
+    "date-fns": "^3.6.0",
+    "clsx": "^2.1.0",
+    "sqlite3": "^5.1.7"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "@eslint/js": "^9.30.1",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.6.0",
+    "eslint": "^9.30.1",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.20",
+    "globals": "^16.3.0",
+    "vite": "^7.0.4",
+    "tailwindcss": "^3.4.3",
+    "autoprefixer": "^10.4.19",
+    "postcss": "^8.4.38"
   }
 }
