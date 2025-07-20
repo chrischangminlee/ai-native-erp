@@ -24,7 +24,6 @@ const subNavConfig = {
     { path: 'by-product', label: '제품별' },
     { path: 'by-customer', label: '고객별' },
     { path: 'by-region', label: '지역별' },
-    { path: 'forecast', label: '예측' },
     { path: 'receivables', label: '매출채권' },
   ],
   '/inventory': [

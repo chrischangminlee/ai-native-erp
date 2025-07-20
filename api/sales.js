@@ -339,7 +339,7 @@ async function getReceivables(req, res) {
       total_invoices: summary.total_invoices || 0
     },
     aging: aging,
-    items: outstanding
+    outstanding: outstanding
   };
 }
 

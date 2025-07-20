@@ -83,47 +83,122 @@ async function getByProcess(req, res) {
   const processMetrics = await db.allAsync(`
     SELECT 
       pp.code,
-      pp.name,
+      pp.name as process_name,
+      pp.type as process_type,
       pp.standard_cycle_time,
-      COUNT(po.id) as order_count,
+      COUNT(po.id) as total_orders,
+      COUNT(CASE WHEN po.status = 'completed' THEN 1 END) as completed_orders,
+      COALESCE(SUM(po.actual_quantity), 0) as output_quantity,
       AVG(
         CAST((JULIANDAY(po.actual_end_date) - JULIANDAY(po.actual_start_date)) * 24 * 60 AS REAL)
-      ) as actual_cycle_time,
+      ) as avg_cycle_time,
       MIN(
         CAST((JULIANDAY(po.actual_end_date) - JULIANDAY(po.actual_start_date)) * 24 * 60 AS REAL)
       ) as min_cycle_time,
       MAX(
         CAST((JULIANDAY(po.actual_end_date) - JULIANDAY(po.actual_start_date)) * 24 * 60 AS REAL)
-      ) as max_cycle_time
+      ) as max_cycle_time,
+      AVG(po.yield_percentage) as yield_rate
     FROM production_processes pp
     LEFT JOIN production_orders po ON pp.id = po.process_id
       AND po.actual_end_date BETWEEN ? AND ?
-      AND po.status = 'completed'
-    GROUP BY pp.id, pp.code, pp.name, pp.standard_cycle_time
+    GROUP BY pp.id, pp.code, pp.name, pp.type, pp.standard_cycle_time
   `, [startDate, endDate]);
 
-  const oeeData = processMetrics.map(process => {
-    const efficiency = process.standard_cycle_time && process.actual_cycle_time
-      ? (process.standard_cycle_time / process.actual_cycle_time * 100).toFixed(2)
+  // Get defect quantities
+  const defectData = await db.allAsync(`
+    SELECT 
+      pp.id as process_id,
+      COALESCE(SUM(pd.quantity), 0) as defect_quantity
+    FROM production_processes pp
+    LEFT JOIN production_orders po ON pp.id = po.process_id
+    LEFT JOIN production_defects pd ON po.id = pd.production_order_id
+    WHERE po.actual_end_date BETWEEN ? AND ?
+    GROUP BY pp.id
+  `, [startDate, endDate]);
+
+  const defectMap = Object.fromEntries(defectData.map(d => [d.process_id, d.defect_quantity]));
+
+  // Get equipment status
+  const statusData = await db.allAsync(`
+    SELECT 
+      pp.id as process_id,
+      CASE 
+        WHEN COUNT(CASE WHEN e.status = 'running' THEN 1 END) > 0 THEN '가동중'
+        WHEN COUNT(CASE WHEN e.status = 'maintenance' THEN 1 END) > 0 THEN '점검중'
+        WHEN COUNT(CASE WHEN e.status = 'idle' THEN 1 END) > 0 THEN '대기'
+        ELSE '정지'
+      END as status
+    FROM production_processes pp
+    LEFT JOIN equipment e ON pp.id = e.process_id
+    GROUP BY pp.id
+  `);
+
+  const statusMap = Object.fromEntries(statusData.map(s => [s.process_id, s.status]));
+
+  const processes = processMetrics.map(process => {
+    const efficiency = process.standard_cycle_time && process.avg_cycle_time
+      ? parseFloat((process.standard_cycle_time / process.avg_cycle_time * 100).toFixed(2))
       : 0;
     
     return {
       ...process,
-      efficiency_percentage: parseFloat(efficiency),
-      cycle_time_variance: process.actual_cycle_time 
-        ? ((process.actual_cycle_time - process.standard_cycle_time) / process.standard_cycle_time * 100).toFixed(2)
-        : 0
+      efficiency,
+      yield_rate: parseFloat((process.yield_rate || 0).toFixed(2)),
+      defect_quantity: defectMap[process.code] || 0,
+      status: statusMap[process.code] || '대기',
+      avg_cycle_time: Math.round(process.avg_cycle_time || 0)
     };
   });
 
-  const bottlenecks = oeeData
-    .filter(p => p.efficiency_percentage < 80 && p.order_count > 0)
-    .sort((a, b) => a.efficiency_percentage - b.efficiency_percentage)
-    .slice(0, 5);
+  // Calculate summary metrics
+  const summary = {
+    overall_efficiency: parseFloat((processes.reduce((sum, p) => sum + p.efficiency, 0) / processes.length).toFixed(2)) || 0,
+    avg_yield_rate: parseFloat((processes.reduce((sum, p) => sum + p.yield_rate, 0) / processes.length).toFixed(2)) || 0,
+    avg_cycle_time: Math.round(processes.reduce((sum, p) => sum + p.avg_cycle_time, 0) / processes.length) || 0,
+    bottleneck_process: processes.filter(p => p.total_orders > 0).sort((a, b) => a.efficiency - b.efficiency)[0]?.process_name || 'N/A'
+  };
+
+  // Get efficiency trend for the last 7 days
+  const efficiencyTrend = await db.allAsync(`
+    SELECT 
+      DATE(po.actual_end_date) as date,
+      pp.name as process_name,
+      AVG(pp.standard_cycle_time / NULLIF(
+        CAST((JULIANDAY(po.actual_end_date) - JULIANDAY(po.actual_start_date)) * 24 * 60 AS REAL), 0
+      ) * 100) as efficiency
+    FROM production_orders po
+    JOIN production_processes pp ON po.process_id = pp.id
+    WHERE po.actual_end_date >= date('now', '-7 days')
+      AND po.status = 'completed'
+    GROUP BY DATE(po.actual_end_date), pp.name
+    ORDER BY date
+  `);
+
+  // Transform efficiency trend data for chart
+  const trendByDate = {};
+  efficiencyTrend.forEach(item => {
+    if (!trendByDate[item.date]) {
+      trendByDate[item.date] = { date: item.date };
+    }
+    // Map process names to expected keys
+    const processKeyMap = {
+      '절단': 'cutting',
+      '용접': 'welding',
+      '조립': 'assembly',
+      '도장': 'painting',
+      '검사': 'inspection'
+    };
+    const key = processKeyMap[item.process_name] || item.process_name.toLowerCase();
+    trendByDate[item.date][key] = parseFloat(item.efficiency.toFixed(2));
+  });
+
+  const efficiency_trend = Object.values(trendByDate);
 
   return {
-    processPerformance: oeeData,
-    bottlenecks,
+    summary,
+    processes,
+    efficiency_trend,
     period: { startDate, endDate }
   };
 }

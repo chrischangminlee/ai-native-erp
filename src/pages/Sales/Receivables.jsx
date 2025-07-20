@@ -55,7 +55,7 @@ function Receivables() {
       key: 'days_overdue', 
       label: 'Days Overdue', 
       sortable: true,
-      render: (value) => {
+      format: (value) => {
         const days = Math.round(value);
         if (days <= 0) return <span className="text-green-600">Current</span>;
         const color = days > 60 ? 'text-red-600' : days > 30 ? 'text-amber-600' : 'text-yellow-600';
@@ -95,7 +95,7 @@ function Receivables() {
         <KPICard
           title="Days Sales Outstanding"
           value={summary.days_sales_outstanding}
-          unit="days"
+          suffix="days"
         />
       </div>
 

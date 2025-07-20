@@ -3,7 +3,6 @@ import Dashboard from './Dashboard';
 import ByProduct from './ByProduct';
 import ByCustomer from './ByCustomer';
 import ByRegion from './ByRegion';
-import Forecast from './Forecast';
 import Receivables from './Receivables';
 
 function SalesOverview() {
@@ -13,7 +12,6 @@ function SalesOverview() {
       <Route path="by-product" element={<ByProduct />} />
       <Route path="by-customer" element={<ByCustomer />} />
       <Route path="by-region" element={<ByRegion />} />
-      <Route path="forecast" element={<Forecast />} />
       <Route path="receivables" element={<Receivables />} />
       <Route path="/" element={<Navigate to="dashboard" replace />} />
     </Routes>
