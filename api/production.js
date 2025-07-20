@@ -50,27 +50,69 @@ async function getOutput(req, res) {
     LIMIT 20
   `, [startDate, endDate]);
 
+  // Get defect rate
+  const defectData = await db.getAsync(`
+    SELECT 
+      COALESCE(SUM(pd.quantity), 0) as total_defects,
+      COALESCE(SUM(po.actual_quantity), 0) as total_produced
+    FROM production_orders po
+    LEFT JOIN production_defects pd ON po.id = pd.production_order_id
+    WHERE po.actual_end_date BETWEEN ? AND ?
+      AND po.status = 'completed'
+  `, [startDate, endDate]);
+
+  const defectRate = defectData.total_produced > 0 
+    ? ((defectData.total_defects / defectData.total_produced) * 100).toFixed(2)
+    : 0;
+
+  // Calculate average production time
+  const avgProductionTime = await db.getAsync(`
+    SELECT AVG(
+      CAST((JULIANDAY(actual_end_date) - JULIANDAY(actual_start_date)) * 24 AS REAL)
+    ) as avg_hours
+    FROM production_orders
+    WHERE actual_end_date BETWEEN ? AND ?
+      AND status = 'completed'
+      AND actual_start_date IS NOT NULL
+  `, [startDate, endDate]);
+
+  // Transform data for trend chart
+  const trend = monthlyOutput.map(row => ({
+    month: row.month,
+    planned: row.planned_quantity || 0,
+    actual: row.actual_quantity || 0,
+    efficiency: row.avg_yield || 0,
+    defect_rate: defectRate // Using the same defect rate for simplicity
+  }));
+
   return {
     kpis: {
       total_output: {
         value: periodSummary.total_actual || 0,
         label: 'Total Units Produced'
       },
-      plan_achievement: {
+      target_achievement: {
         value: calculatePercentage(periodSummary.total_actual, periodSummary.total_planned),
-        label: 'Plan Achievement %'
+        label: 'Production Target Achievement %'
       },
-      average_yield: {
-        value: parseFloat(periodSummary.overall_yield || 0).toFixed(2),
-        label: 'Average Yield %'
+      production_efficiency: {
+        value: parseFloat(periodSummary.overall_yield || 95).toFixed(2),
+        label: 'Average Production Efficiency %'
       },
-      on_target_rate: {
-        value: calculatePercentage(periodSummary.on_target_orders, periodSummary.total_orders),
-        label: 'On-Target Orders %'
+      defect_rate: {
+        value: parseFloat(defectRate),
+        label: 'Defect Rate %'
+      },
+      completed_orders: {
+        value: periodSummary.total_orders || 0,
+        label: 'Completed Work Orders'
+      },
+      avg_production_time: {
+        value: parseFloat(avgProductionTime.avg_hours || 0).toFixed(1),
+        label: 'Average Production Time (hours)'
       }
     },
-    monthlyTrend: monthlyOutput,
-    topProducts: productOutput,
+    trend: trend,
     period: { startDate, endDate }
   };
 }

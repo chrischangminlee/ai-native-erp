@@ -379,115 +379,109 @@ async function getHistory(req, res) {
   // Mock transaction history with Korean product names
   const transactions = [
     {
-      id: 'TRX001',
-      date: format(new Date(), 'yyyy-MM-dd'),
-      time: '14:30:00',
-      transaction_type: '입고',
+      transaction_id: 'TRX001',
+      transaction_date: format(new Date(), 'yyyy-MM-dd') + 'T14:30:00',
+      type: 'inbound',
       sku: 'SKU001',
-      product_name: '삼성 갤럭시 S24 울트라',
-      warehouse: '서울 중앙 물류센터',
+      name: '삼성 갤럭시 S24 울트라',
       quantity: 100,
-      unit_cost: 1500000,
-      total_value: 150000000,
-      reference: 'PO2024-0315',
-      user: '김민수'
+      unit: 'EA',
+      warehouse_from: '-',
+      warehouse_to: '서울 중앙 물류센터',
+      reference_doc: 'PO2024-0315',
+      user_name: '김민수',
+      notes: '신제품 입고'
     },
     {
-      id: 'TRX002',
-      date: format(addDays(new Date(), -1), 'yyyy-MM-dd'),
-      time: '10:15:00',
-      transaction_type: '출고',
+      transaction_id: 'TRX002',
+      transaction_date: format(addDays(new Date(), -1), 'yyyy-MM-dd') + 'T10:15:00',
+      type: 'outbound',
       sku: 'SKU003',
-      product_name: '농심 신라면 (박스)',
-      warehouse: '대전 유통센터',
+      name: '농심 신라면 (박스)',
       quantity: 500,
-      unit_cost: 15000,
-      total_value: 7500000,
-      reference: 'SO2024-1234',
-      user: '이영희'
+      unit: 'BOX',
+      warehouse_from: '대전 유통센터',
+      warehouse_to: '-',
+      reference_doc: 'SO2024-1234',
+      user_name: '이영희',
+      notes: '대량 출고'
     },
     {
-      id: 'TRX003',
-      date: format(addDays(new Date(), -2), 'yyyy-MM-dd'),
-      time: '16:45:00',
-      transaction_type: '이동',
+      transaction_id: 'TRX003',
+      transaction_date: format(addDays(new Date(), -2), 'yyyy-MM-dd') + 'T16:45:00',
+      type: 'transfer',
       sku: 'SKU002',
-      product_name: 'LG 올레드 TV 65인치',
-      warehouse: '부산 항만 창고 → 서울 중앙 물류센터',
+      name: 'LG 올레드 TV 65인치',
       quantity: 20,
-      unit_cost: 3200000,
-      total_value: 64000000,
-      reference: 'TRF2024-0089',
-      user: '박철수'
+      unit: 'EA',
+      warehouse_from: '부산 항만 창고',
+      warehouse_to: '서울 중앙 물류센터',
+      reference_doc: 'TRF2024-0089',
+      user_name: '박철수',
+      notes: '창고간 이동'
     },
     {
-      id: 'TRX004',
-      date: format(addDays(new Date(), -3), 'yyyy-MM-dd'),
-      time: '09:00:00',
-      transaction_type: '입고',
+      transaction_id: 'TRX004',
+      transaction_date: format(addDays(new Date(), -3), 'yyyy-MM-dd') + 'T09:00:00',
+      type: 'inbound',
       sku: 'SKU004',
-      product_name: '아모레퍼시픽 설화수 세트',
-      warehouse: '서울 중앙 물류센터',
+      name: '아모레퍼시픽 설화수 세트',
       quantity: 50,
-      unit_cost: 180000,
-      total_value: 9000000,
-      reference: 'PO2024-0310',
-      user: '정수진'
+      unit: 'SET',
+      warehouse_from: '-',
+      warehouse_to: '서울 중앙 물류센터',
+      reference_doc: 'PO2024-0310',
+      user_name: '정수진',
+      notes: '화장품 입고'
     },
     {
-      id: 'TRX005',
-      date: format(addDays(new Date(), -4), 'yyyy-MM-dd'),
-      time: '13:20:00',
-      transaction_type: '출고',
+      transaction_id: 'TRX005',
+      transaction_date: format(addDays(new Date(), -4), 'yyyy-MM-dd') + 'T13:20:00',
+      type: 'outbound',
       sku: 'SKU005',
-      product_name: '현대자동차 부품 - 엔진오일',
-      warehouse: '부산 항만 창고',
+      name: '현대자동차 부품 - 엔진오일',
       quantity: 200,
-      unit_cost: 8500,
-      total_value: 1700000,
-      reference: 'SO2024-1230',
-      user: '최동욱'
+      unit: 'L',
+      warehouse_from: '부산 항만 창고',
+      warehouse_to: '-',
+      reference_doc: 'SO2024-1230',
+      user_name: '최동욱',
+      notes: '정기 출고'
     },
     {
-      id: 'TRX006',
-      date: format(addDays(new Date(), -5), 'yyyy-MM-dd'),
-      time: '11:00:00',
-      transaction_type: '조정',
+      transaction_id: 'TRX006',
+      transaction_date: format(addDays(new Date(), -5), 'yyyy-MM-dd') + 'T11:00:00',
+      type: 'adjustment',
       sku: 'SKU006',
-      product_name: '삼성 비스포크 냉장고',
-      warehouse: '인천 공항 물류센터',
+      name: '삼성 비스포크 냉장고',
       quantity: -2,
-      unit_cost: 2800000,
-      total_value: -5600000,
-      reference: 'ADJ2024-0045',
-      user: '한지민'
+      unit: 'EA',
+      warehouse_from: '인천 공항 물류센터',
+      warehouse_to: '인천 공항 물류센터',
+      reference_doc: 'ADJ2024-0045',
+      user_name: '한지민',
+      notes: '재고 조정 (파손)'
     }
   ];
 
   // Mock summary data
   const summary = {
     total_transactions: transactions.length,
-    total_inbound: transactions.filter(t => t.transaction_type === '입고').reduce((sum, t) => sum + t.quantity, 0),
-    total_outbound: transactions.filter(t => t.transaction_type === '출고').reduce((sum, t) => sum + t.quantity, 0),
-    total_transfers: transactions.filter(t => t.transaction_type === '이동').reduce((sum, t) => sum + t.quantity, 0),
-    total_adjustments: transactions.filter(t => t.transaction_type === '조정').length,
-    total_value_change: transactions.reduce((sum, t) => {
-      if (t.transaction_type === '입고') return sum + t.total_value;
-      if (t.transaction_type === '출고') return sum - t.total_value;
-      if (t.transaction_type === '조정') return sum + t.total_value;
-      return sum;
-    }, 0)
+    total_inbound: transactions.filter(t => t.type === 'inbound').reduce((sum, t) => sum + t.quantity, 0),
+    total_outbound: transactions.filter(t => t.type === 'outbound').reduce((sum, t) => sum + t.quantity, 0),
+    total_transfer: transactions.filter(t => t.type === 'transfer').reduce((sum, t) => sum + t.quantity, 0),
+    total_adjustments: transactions.filter(t => t.type === 'adjustment').length
   };
 
   // Mock daily trend data
   const dailyTrend = [
-    { date: format(new Date(), 'yyyy-MM-dd'), inbound: 100, outbound: 80, transfers: 20 },
-    { date: format(addDays(new Date(), -1), 'yyyy-MM-dd'), inbound: 150, outbound: 120, transfers: 30 },
-    { date: format(addDays(new Date(), -2), 'yyyy-MM-dd'), inbound: 200, outbound: 180, transfers: 25 },
-    { date: format(addDays(new Date(), -3), 'yyyy-MM-dd'), inbound: 120, outbound: 100, transfers: 15 },
-    { date: format(addDays(new Date(), -4), 'yyyy-MM-dd'), inbound: 180, outbound: 160, transfers: 20 },
-    { date: format(addDays(new Date(), -5), 'yyyy-MM-dd'), inbound: 90, outbound: 70, transfers: 10 },
-    { date: format(addDays(new Date(), -6), 'yyyy-MM-dd'), inbound: 110, outbound: 95, transfers: 18 }
+    { date: format(new Date(), 'yyyy-MM-dd'), inbound: 100, outbound: 80, transfer: 20 },
+    { date: format(addDays(new Date(), -1), 'yyyy-MM-dd'), inbound: 150, outbound: 120, transfer: 30 },
+    { date: format(addDays(new Date(), -2), 'yyyy-MM-dd'), inbound: 200, outbound: 180, transfer: 25 },
+    { date: format(addDays(new Date(), -3), 'yyyy-MM-dd'), inbound: 120, outbound: 100, transfer: 15 },
+    { date: format(addDays(new Date(), -4), 'yyyy-MM-dd'), inbound: 180, outbound: 160, transfer: 20 },
+    { date: format(addDays(new Date(), -5), 'yyyy-MM-dd'), inbound: 90, outbound: 70, transfer: 10 },
+    { date: format(addDays(new Date(), -6), 'yyyy-MM-dd'), inbound: 110, outbound: 95, transfer: 18 }
   ];
 
   return {
