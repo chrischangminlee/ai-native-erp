@@ -56,7 +56,6 @@ const subNavConfig = {
 function Layout() {
   const location = useLocation();
   const [activeMainNav, setActiveMainNav] = useState('/');
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   useEffect(() => {
     const pathSegments = location.pathname.split('/');
@@ -105,18 +104,12 @@ function Layout() {
       <div className="flex flex-1">
         {/* Left Sidebar */}
         {activeMainNav !== '/' && (
-          <aside className={`${isSidebarOpen ? 'w-64' : 'w-0'} transition-all duration-300 overflow-hidden bg-white shadow-lg`}>
+          <aside className="w-64 bg-white shadow-lg">
             <div className="h-full px-3 py-4">
-              <div className="flex items-center justify-between mb-4">
+              <div className="mb-4">
                 <h2 className="text-lg font-semibold text-gray-800">
                   {mainNavItems.find(item => item.path === activeMainNav)?.label}
                 </h2>
-                <button
-                  onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                  className="p-1 rounded hover:bg-gray-100"
-                >
-                  <ChevronRight className={`w-5 h-5 transition-transform ${isSidebarOpen ? 'rotate-180' : ''}`} />
-                </button>
               </div>
               <nav className="space-y-1">
                 {getSubNavItems().map((item) => (

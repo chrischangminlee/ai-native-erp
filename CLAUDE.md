@@ -1,322 +1,426 @@
-# Manufacturing ERP Demo - AI Assistant Guide
+# AI-Native Manufacturing ERP System - Claude Code Guide
 
-## Project Overview
+> 🎯 **Purpose**: This guide helps Claude Code understand the project structure and assists non-developers in making effective changes to the ERP system.
 
-This is a lightweight Manufacturing ERP (Enterprise Resource Planning) demonstration system designed specifically for AI integration. The system provides comprehensive manufacturing operations management through four main modules: Sales, Inventory, Production, and Finance. It's built as a monorepo with separate backend and frontend workspaces, featuring REST APIs with consistent field naming conventions optimized for AI/LLM consumption.
+## 🌟 Quick Overview for Non-Developers
 
-### Purpose
-- Demonstrate a modern ERP architecture suitable for manufacturing businesses
-- Provide clean, AI-friendly APIs for seamless integration with language models
-- Showcase best practices in full-stack JavaScript development
-- Serve as a foundation for building AI-enhanced ERP features
+This is a web-based ERP (Enterprise Resource Planning) system designed for manufacturing companies. It helps track:
+- **Sales** (매출): Customer orders, revenue, forecasts
+- **Inventory** (재고): Stock levels, warehouse management, expiry tracking
+- **Production** (생산): Manufacturing orders, material usage, quality control
+- **Finance** (재무): Profit & loss, cost analysis, cash flow
 
-## Architecture Decisions & Tech Stack
+The system is built to be "AI-ready" with clean data structures that AI assistants can easily understand and modify.
 
-### Backend
-- **Runtime**: Node.js (v16+) with ES modules
-- **Framework**: Express.js 4.x for REST API
-- **Database**: SQLite3 for simplicity and portability
-- **API Documentation**: Swagger/OpenAPI auto-generated from JSDoc comments
-- **Key Libraries**:
-  - `cors` for cross-origin resource sharing
-  - `date-fns` for date manipulation
-  - `swagger-jsdoc` & `swagger-ui-express` for API documentation
-
-### Frontend
-- **Framework**: React 18.x with Vite as build tool
-- **Routing**: React Router v6 for client-side navigation
-- **Styling**: Tailwind CSS for utility-first styling
-- **Charts**: Recharts for data visualization
-- **HTTP Client**: Axios with interceptors for API communication
-- **Icons**: Lucide React for consistent iconography
-- **State Management**: React hooks (useState, useEffect) - no external state library
-
-### Architecture Principles
-- **Separation of Concerns**: Clear separation between API and UI layers
-- **RESTful Design**: Consistent REST endpoints with predictable patterns
-- **Monorepo Structure**: Shared development environment with npm workspaces
-- **Database-First**: Schema drives the application design
-- **AI-Ready**: Consistent field naming and structured responses
-
-## Project Structure
+## 🏗️ Architecture Overview
 
 ```
-manufacturing-erp-demo/
-├── backend/                    # Express.js API server
-│   ├── src/
-│   │   ├── controllers/       # Business logic handlers
-│   │   │   ├── financeController.js
-│   │   │   ├── inventoryController.js
-│   │   │   ├── productionController.js
-│   │   │   └── salesController.js
-│   │   ├── db/               # Database layer
-│   │   │   ├── database.js   # SQLite connection manager
-│   │   │   ├── schema.sql    # Database schema definition
-│   │   │   └── seed.js       # Sample data generator
-│   │   ├── routes/           # API endpoint definitions
-│   │   │   ├── finance.js
-│   │   │   ├── inventory.js
-│   │   │   ├── production.js
-│   │   │   └── sales.js
-│   │   ├── utils/            # Helper functions
-│   │   │   └── helpers.js    # Date ranges, calculations, etc.
-│   │   └── index.js          # Server entry point
-│   └── package.json
-├── frontend/                  # React SPA
-│   ├── src/
-│   │   ├── components/       # Reusable UI components
-│   │   │   ├── DataTable.jsx
-│   │   │   ├── ErrorMessage.jsx
-│   │   │   ├── KPICard.jsx
-│   │   │   ├── Layout.jsx
-│   │   │   ├── LoadingSpinner.jsx
-│   │   │   ├── PeriodSelector.jsx
-│   │   │   └── TrendChart.jsx
-│   │   ├── pages/           # Route-based page components
-│   │   │   ├── Finance/
-│   │   │   ├── Inventory/
-│   │   │   ├── Production/
-│   │   │   ├── Sales/
-│   │   │   └── Home.jsx
-│   │   ├── services/        # API integration layer
-│   │   │   └── api.js       # Axios configuration & API methods
-│   │   ├── App.jsx          # Root component with routing
-│   │   └── main.jsx         # Application entry point
-│   └── package.json
-└── package.json             # Root package with workspace configuration
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│   Frontend      │────▶│   API Routes    │────▶│   Database      │
+│   (React)       │     │   (Vercel)      │     │   (SQLite)     │
+└─────────────────┘     └─────────────────┘     └─────────────────┘
+     Browser              Serverless              File-based DB
 ```
 
-## Important Conventions & Patterns
+### Deployment Structure
+- **Platform**: Vercel (serverless hosting)
+- **Frontend**: React single-page application
+- **Backend**: 4 consolidated API endpoints (sales, inventory, production, finance)
+- **Database**: SQLite (automatically initialized with sample data)
 
-### API Response Structure
-All API endpoints return consistent JSON structures:
-```json
-{
-  "kpis": {
-    "metric_name": {
-      "value": number,
-      "yoy": string,      // Year-over-year percentage
-      "label": string     // Human-readable label
-    }
-  },
-  "trend": [...],         // Time-series data
-  "items": [...],         // Detailed records
-  "period": {
-    "startDate": "YYYY-MM-DD",
-    "endDate": "YYYY-MM-DD"
-  }
-}
+## 📁 Project Structure Explained
+
+```
+ai-native-erp/
+├── 📂 api/                    # Backend API endpoints (Vercel serverless functions)
+│   ├── sales.js              # All sales-related endpoints
+│   ├── inventory.js          # All inventory-related endpoints
+│   ├── production.js         # All production-related endpoints
+│   └── finance.js            # All finance-related endpoints
+│
+├── 📂 lib/                    # Shared backend utilities
+│   ├── db.js                 # Database connection handler
+│   ├── helpers.js            # Utility functions (date ranges, calculations)
+│   ├── init-db.js            # Auto-initializes database on first run
+│   ├── schema.sql            # Database structure definition
+│   └── seed.js               # Sample data generator
+│
+├── 📂 src/                    # Frontend React application
+│   ├── 📂 components/        # Reusable UI components
+│   │   ├── DataTable.jsx     # Tables with sorting
+│   │   ├── KPICard.jsx       # Metric display cards
+│   │   ├── TrendChart.jsx    # Line/bar charts
+│   │   └── Layout.jsx        # Main navigation structure
+│   │
+│   ├── 📂 pages/             # Main application screens
+│   │   ├── Sales/            # 6 sales sub-pages
+│   │   ├── Inventory/        # 6 inventory sub-pages
+│   │   ├── Production/       # 6 production sub-pages
+│   │   ├── Finance/          # 6 finance sub-pages
+│   │   └── Home.jsx          # Landing page
+│   │
+│   ├── 📂 services/          # API communication
+│   │   └── api.js            # Centralized API calls
+│   │
+│   └── App.jsx               # Main app routing
+│
+├── 📂 public/                # Static assets
+├── package.json              # Project dependencies
+├── vercel.json              # Vercel deployment config
+└── vite.config.js           # Frontend build config
 ```
 
-### Naming Conventions
-- **Database**: Snake_case for tables and columns (e.g., `sales_orders`, `unit_price`)
-- **API Routes**: Kebab-case URLs (e.g., `/api/sales/by-product`)
-- **JavaScript**: camelCase for variables and functions
-- **React Components**: PascalCase for component names
-- **CSS Classes**: Tailwind utility classes
+## 🔄 Common Workflows for Non-Developers
 
-### Error Handling
-- Backend: Try-catch blocks in controllers with 500 status on errors
-- Frontend: Error boundaries and fallback UI components
-- API: Axios interceptors for global error handling
+### 1. Changing Text/Labels (한글 번역)
+**Where**: Component files in `src/components/` and `src/pages/`
+**Example**: To change "Revenue" to "매출액":
+```javascript
+// Before
+<h3>Revenue</h3>
 
-### Date Handling
-- All dates stored as ISO strings in SQLite
-- `date-fns` library for date manipulation
-- Consistent period parameters: 'current-month', 'last-3-months', etc.
-
-## Database Schema Overview
-
-### Core Tables
-1. **products**: Product catalog with SKU, pricing, and categories
-2. **customers**: Customer master data with regions and credit limits
-3. **sales_orders**: Sales transactions with status tracking
-4. **sales_order_items**: Line items with margins
-5. **warehouses**: Storage locations
-6. **inventory_stock**: Current stock levels by warehouse and lot
-7. **inventory_transactions**: Stock movement history
-8. **production_orders**: Manufacturing work orders
-9. **production_processes**: Manufacturing process definitions
-10. **bom**: Bill of Materials relationships
-11. **material_consumption**: Actual vs planned material usage
-12. **production_defects**: Quality tracking
-13. **equipment**: Asset registry
-14. **equipment_utilization**: OEE tracking
-15. **departments**: Cost centers
-16. **financial_transactions**: General ledger entries
-17. **monthly_snapshots**: Pre-aggregated metrics for performance
-
-### Key Relationships
-- Products → Sales Orders → Customers
-- Products → Inventory → Warehouses
-- Production Orders → BOM → Material Consumption
-- Financial Transactions → Departments
-
-## API Design Principles
-
-### RESTful Endpoints
-Each module follows consistent patterns:
-- `GET /api/{module}/dashboard` - Overview metrics
-- `GET /api/{module}/by-{dimension}` - Dimensional analysis
-- `GET /api/{module}/{specific-feature}` - Specialized views
-
-### Query Parameters
-- `period`: Time range filter (standardized values)
-- `warehouse_id`: Location filter for inventory
-- `days_ahead`: Forward-looking windows
-- `method`: Calculation methods (e.g., FIFO, LIFO)
-
-### Performance Optimizations
-- Database indexes on date and foreign key columns
-- Monthly snapshots table for pre-aggregated metrics
-- Efficient SQL queries with proper JOINs
-- Pagination support (though not fully implemented)
-
-## Frontend Component Architecture
-
-### Component Hierarchy
-```
-App.jsx
-└── Layout.jsx (navigation wrapper)
-    └── Module Overview Pages (e.g., SalesOverview)
-        ├── PeriodSelector (time range control)
-        ├── KPICard (metric displays)
-        ├── TrendChart (time series)
-        └── DataTable (detailed records)
+// After  
+<h3>매출액</h3>
 ```
 
-### State Management
-- Local component state for UI controls
-- Data fetching with useEffect hooks
-- Loading and error states in each page component
-- No global state management (keeping it simple)
+### 2. Modifying KPI Cards
+**Where**: Page files like `src/pages/Sales/Dashboard.jsx`
+**What to look for**: `<KPICard>` components
+```javascript
+<KPICard
+  title="총 매출"           // Change title here
+  value={revenue}          // Don't change this
+  suffix="원"              // Add currency suffix
+  trend={revenueGrowth}    // Don't change this
+  icon={ShoppingCart}      // Don't change this
+/>
+```
 
-### Routing Structure
-- `/` - Home dashboard
-- `/sales/*` - Sales module with sub-routes
-- `/inventory/*` - Inventory module
-- `/production/*` - Production module
-- `/finance/*` - Finance module
+### 3. Changing Chart Colors
+**Where**: `TrendChart.jsx` component
+**Look for**: Color definitions like `#3B82F6` (blue), `#10B981` (green)
 
-## Testing Approach
+### 4. Adding New Metrics
+**Process**:
+1. Add calculation in API endpoint (e.g., `api/sales.js`)
+2. Add display in frontend page
+3. Claude Code can help with both steps
 
-Currently, the project does not include automated tests. For production use, consider adding:
-- **Backend**: Jest for unit tests, Supertest for API integration tests
-- **Frontend**: Vitest for component tests, React Testing Library
-- **E2E**: Playwright or Cypress for end-to-end testing
+### 5. Modifying Navigation
+**Where**: `src/components/Layout.jsx`
+**What**: `mainNavItems` and `subNavConfig` objects
 
-## Development Workflow
+## 🔌 API Structure
 
-### Initial Setup
+Each module has one API file handling multiple actions:
+
+### Sales API (`/api/sales`)
+- `?action=dashboard` - Overview metrics
+- `?action=by-product` - Product performance
+- `?action=by-customer` - Customer analysis
+- `?action=by-region` - Regional breakdown
+- `?action=forecast` - Sales predictions
+- `?action=receivables` - Outstanding payments
+
+### Inventory API (`/api/inventory`)
+- `?action=dashboard` - Stock overview
+- `?action=by-item` - Item details
+- `?action=expiry` - Expiration tracking
+- `?action=history` - Movement logs
+- `?action=valuation` - Stock value
+- `?action=risk` - Risk analysis
+
+### Production API (`/api/production`)
+- `?action=output` - Production volume
+- `?action=by-process` - Process efficiency
+- `?action=usage` - Material consumption
+- `?action=defects` - Quality metrics
+- `?action=equipment` - Machine utilization
+- `?action=wip` - Work in progress
+
+### Finance API (`/api/finance`)
+- `?action=dashboard` - P&L overview
+- `?action=by-dept` - Department costs
+- `?action=by-product` - Product profitability
+- `?action=cost-structure` - Fixed vs variable
+- `?action=variance` - Budget variance
+- `?action=cashflow` - Cash analysis
+
+## 💾 Database Schema
+
+### Key Tables and Relationships
+```
+products (제품)
+  ├── sales_order_items (판매 항목)
+  ├── inventory_stock (재고)
+  ├── production_orders (생산 주문)
+  └── bom (자재명세서)
+
+customers (고객)
+  └── sales_orders (판매 주문)
+      └── sales_order_items
+
+warehouses (창고)
+  └── inventory_stock
+      └── inventory_transactions (재고 거래)
+
+departments (부서)
+  └── financial_transactions (재무 거래)
+```
+
+### Important Fields
+- All dates: ISO format (YYYY-MM-DD)
+- All amounts: Numeric (no formatting)
+- Status fields: English lowercase (pending, completed, cancelled)
+
+## 🎨 UI/UX Patterns
+
+### Component Usage
+1. **KPICard**: For single metrics with trends
+   - Shows current value
+   - Year-over-year comparison
+   - Colored trend arrows
+
+2. **TrendChart**: For time-series data
+   - Supports line and bar charts
+   - Automatic formatting
+   - Responsive design
+
+3. **DataTable**: For detailed records
+   - Sortable columns
+   - Formatted numbers
+   - Row highlighting
+
+### Color Scheme
+- Primary: Blue (`#3B82F6`)
+- Success: Green (`#10B981`)
+- Warning: Yellow (`#F59E0B`)
+- Danger: Red (`#EF4444`)
+- Background: Gray (`#F9FAFB`)
+
+### Korean UI Conventions
+- Currency: "원" suffix
+- Percentages: "%" suffix
+- Dates: YYYY년 MM월 DD일
+- Numbers: Comma separators
+
+## 🚀 Deployment Process
+
+### Vercel Deployment
+1. **Automatic**: Push to GitHub triggers deployment
+2. **Manual**: `vercel` command in terminal
+3. **Environment**: No env variables needed (uses SQLite)
+
+### Function Limits
+- Vercel Hobby: Max 12 serverless functions
+- Current usage: 4 functions (consolidated by module)
+- Each function handles 6 sub-actions
+
+## 🔧 Common Modifications
+
+### Adding a New KPI
+1. **Backend**: Add calculation in relevant API function
+```javascript
+// In api/sales.js getDashboard function
+const newMetric = await db.getAsync(`
+  SELECT COUNT(*) as value 
+  FROM sales_orders 
+  WHERE status = 'urgent'
+`);
+```
+
+2. **Frontend**: Display in page component
+```javascript
+<KPICard
+  title="긴급 주문"
+  value={data.kpis.urgent_orders.value}
+  icon={AlertCircle}
+/>
+```
+
+### Changing Date Ranges
+**Location**: `lib/helpers.js` - `getDateRange` function
+**Current options**: 
+- current-month (이번 달)
+- last-month (지난 달)
+- last-3-months (최근 3개월)
+- last-6-months (최근 6개월)
+- last-12-months (최근 12개월)
+
+### Modifying Charts
+**Location**: Component using `<TrendChart>`
+**Properties**:
+- `data`: Array of objects with date/value
+- `dataKey`: Which field to plot
+- `color`: Hex color code
+- `type`: "line" or "bar"
+
+## 🐛 Troubleshooting Guide
+
+### "No Data" Issues
+1. **Check API calls**: Browser DevTools > Network tab
+2. **Database initialization**: Should auto-create on first run
+3. **Date ranges**: Ensure sample data covers selected period
+
+### Styling Issues
+1. **Tailwind classes**: Use Tailwind CSS utilities
+2. **Responsive**: Test on different screen sizes
+3. **Korean text**: Ensure proper font support
+
+### Performance Issues
+1. **Large datasets**: Implement pagination
+2. **Complex queries**: Add database indexes
+3. **Frontend**: Use React.memo for heavy components
+
+## 📚 Best Practices for Claude Code
+
+### When Asking for Changes
+1. **Be specific**: "Change the revenue card title to 매출액"
+2. **Provide context**: "In the sales dashboard..."
+3. **Mention the module**: "In the inventory section..."
+
+### File References
+- Always mention the module (sales/inventory/production/finance)
+- Specify if it's frontend or backend
+- Use Korean terms if referring to UI elements
+
+### Common Patterns
+1. **Adding features**: Usually requires both API and frontend changes
+2. **Changing calculations**: Modify SQL queries in API files
+3. **UI updates**: Change component files in src/pages/
+4. **New reports**: Add new action in API, new component in frontend
+
+## 🌐 Language Considerations
+
+### Current Status
+- **Backend**: English (database, API)
+- **Frontend**: Partially Korean
+- **Comments**: English
+
+### Translation Guidelines
+- Keep technical terms in English in code
+- Translate UI text to Korean
+- Use consistent terminology across modules
+
+### Common Translations
+- Dashboard → 대시보드
+- Revenue → 매출
+- Inventory → 재고
+- Production → 생산
+- Finance → 재무
+- Customer → 고객
+- Product → 제품
+- Order → 주문
+- Report → 보고서
+
+## 🔒 Security Considerations
+
+### Current Implementation
+- No authentication (demo system)
+- Read-only API endpoints
+- SQLite database (file-based)
+- No sensitive data storage
+
+### For Production
+Would need:
+- User authentication
+- Role-based access control
+- Encrypted connections
+- Audit logging
+- Data backup
+
+## 📈 Extending the System
+
+### Adding New Modules
+1. Create new API endpoint in `/api/`
+2. Add navigation in `Layout.jsx`
+3. Create page components in `/src/pages/`
+4. Update `subNavConfig` for sub-navigation
+
+### Integrating External Services
+- APIs: Add to `services/api.js`
+- Webhooks: Create new API endpoints
+- Real-time: Consider WebSocket integration
+
+### Mobile Support
+Currently responsive but for native app:
+- API is ready (RESTful)
+- Would need mobile-specific UI
+- Consider React Native
+
+## 💡 Tips for Non-Developers
+
+### Understanding the Flow
+1. User clicks in browser
+2. React component makes API call
+3. API queries database
+4. Data returns to browser
+5. React updates display
+
+### Making Safe Changes
+- **Safe**: Text, colors, labels
+- **Moderate**: Adding new displays of existing data
+- **Complex**: New calculations, database changes
+
+### Getting Help from Claude Code
+- Describe what you see
+- Explain what you want to change
+- Mention any error messages
+- Share screenshots if needed
+
+### Version Control
+- All changes are tracked in Git
+- Can always revert if needed
+- Test locally before deploying
+
+## 🚦 Quick Command Reference
+
+### Development
 ```bash
-# Clone and navigate to project
-git clone <repository-url>
-cd manufacturing-erp-demo
-
-# Install all dependencies
-npm install
+npm install          # Install dependencies
+npm run dev          # Start local development
+npm run build        # Build for production
 ```
 
-### Development Commands
+### Deployment
 ```bash
-# Start both backend and frontend
-npm run dev
-
-# Backend only (port 3001)
-npm run dev:backend
-
-# Frontend only (port 5173)
-npm run dev:frontend
-
-# Build for production
-npm run build
+git add .            # Stage changes
+git commit -m "..."  # Commit changes
+git push            # Deploy to Vercel
 ```
 
-### Database Management
-- Database auto-initializes on first run
-- Sample data auto-seeds if tables are empty
-- To reset: Delete `backend/src/db/erp.db` and restart
+### Database
+```bash
+# Database auto-initializes, but to reset:
+rm erp.db           # Delete database
+npm run dev         # Restart (auto-creates)
+```
 
-### API Documentation
-- Swagger UI available at http://localhost:3001/api-docs
-- Auto-generated from JSDoc comments in route files
+---
 
-## Future Enhancements & AI Integration Points
+## 📝 Frequently Requested Changes
 
-### Immediate AI Opportunities
-1. **Natural Language Queries**: Add an NLP endpoint to convert questions to SQL
-2. **Anomaly Detection**: Flag unusual patterns in sales, inventory, or production
-3. **Predictive Analytics**: Enhance forecasting with ML models
-4. **Automated Insights**: Generate executive summaries from data
+### 1. "Add a new metric to dashboard"
+- Claude Code needs: Which module, what calculation, where to display
 
-### Suggested Enhancements
-1. **Authentication**: Add JWT-based auth system
-2. **Real-time Updates**: WebSocket support for live dashboards
-3. **Data Export**: CSV/Excel export functionality
-4. **Advanced Filtering**: Multi-dimensional filtering UI
-5. **Mobile Responsive**: Optimize for mobile devices
-6. **Batch Operations**: Bulk update APIs
-7. **Audit Trail**: Change tracking for compliance
+### 2. "Change colors/theme"
+- Claude Code needs: Which components, what colors
 
-### AI-Specific Features
-1. **Conversational Interface**: Chat-based ERP queries
-2. **Smart Alerts**: ML-driven threshold detection
-3. **Document Processing**: OCR for invoice/PO intake
-4. **Demand Forecasting**: Advanced time-series predictions
-5. **Process Optimization**: AI-suggested workflow improvements
+### 3. "Add export to Excel"
+- Claude Code needs: Which data, what format
 
-## Known Issues & Limitations
+### 4. "Translate to Korean"
+- Claude Code needs: Which sections, maintain functionality
 
-### Current Limitations
-1. **Database**: SQLite limits concurrent writes
-2. **Authentication**: No user authentication implemented
-3. **Validation**: Limited input validation on API endpoints
-4. **Error Messages**: Generic error responses need improvement
-5. **Pagination**: Not implemented for large datasets
-6. **Time Zones**: All times assumed to be in local timezone
-7. **Currency**: Single currency support only
+### 5. "Add new report"
+- Claude Code needs: Data source, layout preference
 
-### Technical Debt
-1. **Test Coverage**: No automated tests
-2. **TypeScript**: Consider migration for better type safety
-3. **API Versioning**: No version strategy implemented
-4. **Logging**: Minimal logging infrastructure
-5. **Configuration**: Hard-coded values need environment variables
+## 🎯 Success Tips
 
-## Performance Considerations
+1. **Start small**: Make one change at a time
+2. **Test locally**: Run `npm run dev` before deploying
+3. **Be patient**: Some changes require multiple files
+4. **Ask questions**: Claude Code can explain any part
+5. **Keep backups**: Commit working versions to Git
 
-### Database Performance
-- Indexes on frequently queried columns
-- Monthly snapshots reduce aggregation load
-- Consider PostgreSQL for production use
-- Implement connection pooling for scale
-
-### Frontend Performance
-- Lazy loading for route-based code splitting
-- Memoization for expensive calculations
-- Virtual scrolling for large tables
-- Image optimization needed
-
-### API Performance
-- Add caching layer (Redis) for frequently accessed data
-- Implement request rate limiting
-- Consider GraphQL for reducing over-fetching
-- Add compression middleware
-
-### Monitoring Recommendations
-1. **APM**: Application Performance Monitoring
-2. **Error Tracking**: Sentry or similar
-3. **Analytics**: User behavior tracking
-4. **Uptime**: Endpoint availability monitoring
-5. **Database**: Query performance analysis
-
-## Best Practices for AI Assistants
-
-When working with this codebase:
-1. **Maintain Consistency**: Follow established patterns for new features
-2. **Document Changes**: Update JSDoc comments for API changes
-3. **Test Manually**: Verify changes in both backend and frontend
-4. **Consider Performance**: Check query efficiency for new endpoints
-5. **Preserve AI-Friendliness**: Keep field names descriptive and consistent
-
-This system is designed to be extended and enhanced. The clean architecture and consistent patterns make it ideal for AI-assisted development and integration with language models.
+Remember: This system is designed to be modified. Don't worry about breaking things - that's how we learn and improve!
