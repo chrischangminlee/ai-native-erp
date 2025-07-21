@@ -39,6 +39,7 @@ Thumbs.db
 
 # Testing
 coverage/
+test-api.js
 
 # Misc
 .cache/
