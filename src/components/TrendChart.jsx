@@ -98,9 +98,14 @@ function TrendChart({
           dataKey={xDataKey} 
           tick={{ fontSize: 12 }}
           tickFormatter={(value) => {
-            if (value.includes('-')) {
-              const date = new Date(value + '-01');
-              return format(date, 'MMM yy');
+            // Check if value is a date string (YYYY-MM format)
+            if (typeof value === 'string' && /^\d{4}-\d{2}$/.test(value)) {
+              try {
+                const date = new Date(value + '-01');
+                return format(date, 'MMM yy');
+              } catch (e) {
+                return value;
+              }
             }
             return value;
           }}
@@ -112,9 +117,14 @@ function TrendChart({
         <Tooltip
           formatter={formatTooltipValue}
           labelFormatter={(label) => {
-            if (label.includes('-')) {
-              const date = new Date(label + '-01');
-              return format(date, 'MMMM yyyy');
+            // Check if label is a date string (YYYY-MM format)
+            if (typeof label === 'string' && /^\d{4}-\d{2}$/.test(label)) {
+              try {
+                const date = new Date(label + '-01');
+                return format(date, 'MMMM yyyy');
+              } catch (e) {
+                return label;
+              }
             }
             return label;
           }}
