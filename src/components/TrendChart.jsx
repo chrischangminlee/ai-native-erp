@@ -24,6 +24,7 @@ function TrendChart({
   showGrid = true,
   formatYAxis,
   colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444'],
+  stacked = false,
 }) {
   const formatTooltipValue = (value) => {
     if (formatYAxis === 'currency') {
@@ -54,11 +55,11 @@ function TrendChart({
     };
 
     const chartComponents = dataKeys.map((key, index) => {
-      const color = colors[index % colors.length];
+      const color = key.color || colors[index % colors.length];
       
       switch (type) {
         case 'bar':
-          return <Bar key={key.dataKey} dataKey={key.dataKey} name={key.name} fill={color} />;
+          return <Bar key={key.dataKey} dataKey={key.dataKey} name={key.name} fill={color} stackId={stacked ? "stack" : undefined} />;
         case 'area':
           return (
             <Area
@@ -80,6 +81,7 @@ function TrendChart({
               name={key.name}
               stroke={color}
               strokeWidth={2}
+              strokeDasharray={key.dashStyle ? key.dashStyle.join(' ') : undefined}
               dot={{ r: 4 }}
               activeDot={{ r: 6 }}
             />
