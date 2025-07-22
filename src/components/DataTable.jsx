@@ -130,7 +130,11 @@ function DataTable({
                 {columns.map((column) => (
                   <td
                     key={column.key}
-                    className="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
+                    className={`px-6 py-4 text-sm text-gray-900 ${
+                      typeof column.format === 'function' || column.render
+                        ? ''
+                        : 'whitespace-nowrap'
+                    }`}
                   >
                     {column.render
                       ? column.render(row[column.key], row)
