@@ -134,6 +134,8 @@ function DataTable({
                   >
                     {column.render
                       ? column.render(row[column.key], row)
+                      : typeof column.format === 'function'
+                      ? column.format(row[column.key], row)
                       : formatCellValue(row[column.key], column.format)}
                   </td>
                 ))}

@@ -7,6 +7,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 8000, // 8 second timeout for Vercel's 10 second limit
 });
 
 // Request interceptor
@@ -32,6 +33,12 @@ api.interceptors.response.use(
       // Handle unauthorized
       localStorage.removeItem('authToken');
       window.location.href = '/login';
+    } else if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+      // Handle timeout
+      error.message = 'Request timed out. The server might be experiencing high load. Please try again.';
+    } else if (!error.response) {
+      // Network error
+      error.message = 'Network error. Please check your connection and try again.';
     }
     return Promise.reject(error);
   }
