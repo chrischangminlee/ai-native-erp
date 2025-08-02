@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { executeQuery } from './mockLLMService';
+import { executeQuery } from './geminiService';
 import { getFunctionDescriptions } from './retrievalFunctions';
 
 function App() {
@@ -137,10 +137,12 @@ function App() {
           LLM Retrieval 실험 플랫폼
         </h1>
 
-        <div className="bg-yellow-100 border-l-4 border-yellow-500 p-4 mb-6">
+        <div className="bg-blue-100 border-l-4 border-blue-500 p-4 mb-6">
           <p className="text-sm">
-            <strong>데모 모드:</strong> 이 버전은 백엔드 없이 작동하는 프론트엔드 전용 데모입니다. 
-            실제 LLM 대신 키워드 기반 매칭을 사용합니다.
+            <strong>Gemini AI 모드:</strong> Google Gemini AI를 사용하여 실제 LLM 기반 함수 선택 및 응답을 생성합니다.
+            {!import.meta.env.VITE_GEMINI_API_KEY && 
+              <span className="text-red-600 block mt-1">⚠️ Gemini API 키가 설정되지 않았습니다.</span>
+            }
           </p>
         </div>
 

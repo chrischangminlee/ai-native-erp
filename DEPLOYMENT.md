@@ -1,43 +1,47 @@
-# Deployment Guide (Frontend-Only Demo)
+# Deployment Guide (Gemini AI Frontend)
 
-This is a frontend-only demo version that doesn't require backend deployment.
+This is a frontend-only application that uses Google Gemini AI directly from the browser.
 
 ## Vercel Deployment (Recommended)
 
-1. Push your code to GitHub
-2. Go to [Vercel](https://vercel.com) and sign in
-3. Click "New Project" and import your GitHub repository
-4. Vercel will automatically detect the configuration from `vercel.json`
-5. Click "Deploy" - no environment variables needed!
+1. Set up your Gemini API key:
+   - Go to [Google AI Studio](https://makersuite.google.com/app/apikey)
+   - Create a new API key
 
-## Alternative Static Hosting Options
+2. Push your code to GitHub
 
-Since this is a static frontend application, you can deploy it to any static hosting service:
+3. Deploy to Vercel:
+   - Go to [Vercel](https://vercel.com) and sign in
+   - Click "New Project" and import your GitHub repository
+   - Add environment variable:
+     - Name: `VITE_GEMINI_API_KEY`
+     - Value: Your Gemini API key
+   - Click "Deploy"
+
+## Alternative Deployment Options
 
 ### Netlify
-```bash
-cd llm-retrieval-experiment/frontend
-npm run build
-# Drag and drop the 'dist' folder to Netlify
-```
+1. Build the project:
+   ```bash
+   cd llm-retrieval-experiment/frontend
+   npm run build
+   ```
+2. Go to Netlify dashboard
+3. Add environment variable: `VITE_GEMINI_API_KEY`
+4. Drag and drop the 'dist' folder
 
-### GitHub Pages
+### Local Development
 ```bash
 cd llm-retrieval-experiment/frontend
-npm run build
-# Configure GitHub Pages to serve from the dist folder
-```
-
-### Local Preview
-```bash
-cd llm-retrieval-experiment/frontend
-npm run build
-npm run preview
+cp .env.example .env
+# Edit .env to add your Gemini API key
+npm install
+npm run dev
 ```
 
 ## Important Notes
 
-- This demo version uses mock LLM responses (keyword-based matching)
-- All data is embedded in the frontend bundle
-- No API keys or backend services required
-- Perfect for demonstrations and testing the UI/UX flow
+- The Gemini API key is required for the application to work
+- The API key is used directly from the browser (client-side)
+- Google's Gemini API supports CORS for browser usage
+- Keep your API key secure and use Vercel's environment variables for production

@@ -1,6 +1,6 @@
-# LLM Retrieval 실험 플랫폼 (Frontend Demo)
+# LLM Retrieval 실험 플랫폼 (Gemini AI)
 
-LLM 기반 Retrieval AI Agent의 정보 탐색 방식을 비교하는 실험 플랫폼의 프론트엔드 전용 데모 버전입니다.
+LLM 기반 Retrieval AI Agent의 정보 탐색 방식을 비교하는 실험 플랫폼입니다. Google Gemini AI를 사용하여 실제 LLM 기반 함수 선택 및 응답 생성을 수행합니다.
 
 ## 실험 목적
 
@@ -8,17 +8,24 @@ LLM 기반 Retrieval AI Agent의 정보 탐색 방식을 비교하는 실험 플
 - Explicit Memory 기반 탐색과 Precomputed Statistics 기반 탐색의 차이를 비교
 - 동일 질문을 병렬 실행하여 처리 경로와 응답 결과의 일관성을 검증
 
-## 데모 버전 특징
+## 특징
 
-이 버전은 백엔드 없이 작동하는 프론트엔드 전용 데모입니다:
-- 실제 LLM API 대신 키워드 기반 매칭 사용
-- 모든 데이터와 로직이 브라우저에서 실행
-- Vercel 등 정적 호스팅 서비스에 바로 배포 가능
+- Google Gemini AI를 브라우저에서 직접 호출
+- 백엔드 서버 없이 프론트엔드만으로 작동
+- 실시간 LLM 기반 함수 선택 및 응답 생성
+- Vercel 등 정적 호스팅 서비스에 배포 가능
 
 ## 설치 및 실행
 
+1. Gemini API 키 설정:
 ```bash
 cd llm-retrieval-experiment/frontend
+cp .env.example .env
+# .env 파일을 열어 VITE_GEMINI_API_KEY에 실제 API 키 입력
+```
+
+2. 의존성 설치 및 실행:
+```bash
 npm install
 npm run dev
 ```
@@ -27,7 +34,13 @@ npm run dev
 
 1. GitHub에 코드 푸시
 2. Vercel에서 GitHub 저장소 연결
-3. 자동으로 빌드 및 배포 완료
+3. 환경 변수 설정:
+   - Vercel 대시보드에서 `VITE_GEMINI_API_KEY` 추가
+4. 자동으로 빌드 및 배포 완료
+
+## API 키 발급
+
+[Google AI Studio](https://makersuite.google.com/app/apikey)에서 Gemini API 키를 발급받을 수 있습니다.
 
 ## 주요 기능
 

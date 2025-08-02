@@ -1,20 +1,10 @@
-import express from 'express';
-import cors from 'cors';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import dotenv from 'dotenv';
-import { retrievalFunctions, getFunctionDescriptions } from './retrievalFunctions.js';
+import { retrievalFunctions, getFunctionDescriptions } from './retrievalFunctions';
 
-dotenv.config();
+// Initialize Gemini AI
+const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
 
-const app = express();
-const PORT = process.env.PORT || 3001;
-
-app.use(cors());
-app.use(express.json());
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-
-async function selectRetrievalFunction(userQuestion) {
+export async function selectRetrievalFunction(userQuestion) {
   const functionDescriptions = getFunctionDescriptions();
   
   const prompt = `You are a function selector for an insurance product information system.
@@ -49,7 +39,7 @@ async function selectRetrievalFunction(userQuestion) {
   }
 }
 
-async function generateResponse(question, retrievalResult) {
+export async function generateResponse(question, retrievalResult) {
   const prompt = `You are an insurance product information assistant.
   Based on the retrieval results, provide a clear and concise answer to the user's question.
   Use the data provided to give specific information.
@@ -70,42 +60,7 @@ async function generateResponse(question, retrievalResult) {
   }
 }
 
-app.post('/api/chat', async (req, res) => {
-  try {
-    const { question, executeInParallel = false } = req.body;
-    
-    if (!question) {
-      return res.status(400).json({ error: 'Question is required' });
-    }
-
-    if (executeInParallel) {
-      const [execution1, execution2] = await Promise.all([
-        executeQuery(question),
-        executeQuery(question)
-      ]);
-      
-      res.json({
-        question,
-        parallelExecution: true,
-        executions: [execution1, execution2],
-        timestamp: new Date().toISOString()
-      });
-    } else {
-      const result = await executeQuery(question);
-      res.json({
-        question,
-        parallelExecution: false,
-        execution: result,
-        timestamp: new Date().toISOString()
-      });
-    }
-  } catch (error) {
-    console.error('Error processing chat:', error);
-    res.status(500).json({ error: 'Failed to process chat request' });
-  }
-});
-
-async function executeQuery(question) {
+export async function executeQuery(question) {
   const startTime = Date.now();
   
   const functionSelection = await selectRetrievalFunction(question);
@@ -133,34 +88,3 @@ async function executeQuery(question) {
     }
   };
 }
-
-app.get('/api/functions', (req, res) => {
-  res.json({
-    functions: getFunctionDescriptions()
-  });
-});
-
-app.get('/api/test-scenarios', (req, res) => {
-  res.json({
-    scenarios: [
-      {
-        id: 'A',
-        name: 'Explicit Memory 기반 질문',
-        question: '갑상선암 발생률을 바꾸면 영향을 받는 상품은?',
-        expectedCategory: 'explicit_memory',
-        description: '상품과 가정의 연결 관계를 탐색해야 하는 질문'
-      },
-      {
-        id: 'B',
-        name: 'Precomputed Statistics 기반 질문',
-        question: '2024년 판매 갑상선암 상품들의 보험료 통계는?',
-        expectedCategory: 'precomputed_statistics',
-        description: '사전 계산된 통계를 조회해야 하는 질문'
-      }
-    ]
-  });
-});
-
-app.listen(PORT, () => {
-  console.log(`Backend server running on port ${PORT}`);
-});
