@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { executeQuery } from './geminiService';
-import { getFunctionDescriptions } from './retrievalFunctions';
+import { retrievalFunctions, getFunctionDescriptions } from './retrievalFunctions';
 import explicitMemory from './data/explicitMemory.json';
 import precomputedStats from './data/precomputedStatistics.json';
 
@@ -185,20 +185,6 @@ function App() {
       </header>
 
       <div className="container mx-auto px-4 py-8">
-        <div className="bg-blue-100 border-l-4 border-blue-500 p-4 mb-6">
-          <p className="text-sm">
-            <strong>Gemini AI 모드:</strong> Google Gemini AI를 사용하여 실제 LLM 기반 함수 선택 및 응답을 생성합니다.
-            {(!import.meta.env.VITE_GEMINI_API_KEY || import.meta.env.VITE_GEMINI_API_KEY === 'your_gemini_api_key_here') && 
-              <span className="text-red-600 block mt-1">⚠️ Gemini API 키가 설정되지 않았습니다.</span>
-            }
-            {import.meta.env.DEV && import.meta.env.VITE_GEMINI_API_KEY && (
-              <span className="text-green-600 block mt-1 text-xs">
-                ✓ API Key loaded (Dev mode): {import.meta.env.VITE_GEMINI_API_KEY.substring(0, 10)}...
-              </span>
-            )}
-          </p>
-        </div>
-
         {/* Tab Content */}
         {activeTab === 'experiment' ? (
           <>
@@ -289,25 +275,23 @@ function App() {
             
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div>
-              <h3 className="text-lg font-medium mb-3">검색 함수 (10개)</h3>
+              <h3 className="text-lg font-medium mb-3">검색 함수 ({getFunctionDescriptions().length}개)</h3>
               <div className="bg-gray-50 p-4 rounded">
                 <div className="space-y-2">
                   <div>
-                    <p className="text-sm font-medium text-blue-600">Explicit Memory 함수 (6개)</p>
+                    <p className="text-sm font-medium text-blue-600">Explicit Memory 함수</p>
                     <ul className="text-xs text-gray-700 ml-4 mt-1">
-                      <li>• findProductsByAssumption</li>
-                      <li>• getProductDesignHistory</li>
-                      <li>• getAssumptionRelationships</li>
-                      <li>• searchProductByKeyword</li>
+                      {getFunctionDescriptions().filter(f => f.category === 'explicit_memory').map(f => (
+                        <li key={f.name}>• {f.name}</li>
+                      ))}
                     </ul>
                   </div>
                   <div className="mt-3">
-                    <p className="text-sm font-medium text-green-600">Statistics 함수 (6개)</p>
+                    <p className="text-sm font-medium text-green-600">Statistics 함수</p>
                     <ul className="text-xs text-gray-700 ml-4 mt-1">
-                      <li>• getProductPremiumStatistics</li>
-                      <li>• getFinancialMetrics</li>
-                      <li>• getRiskMetrics</li>
-                      <li>• getContractStatistics</li>
+                      {getFunctionDescriptions().filter(f => f.category === 'precomputed_statistics').map(f => (
+                        <li key={f.name}>• {f.name}</li>
+                      ))}
                     </ul>
                   </div>
                 </div>
