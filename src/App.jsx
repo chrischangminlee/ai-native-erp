@@ -20,21 +20,35 @@ function App() {
   }, []);
 
   useEffect(() => {
-    // Set test scenarios
+    // Set test scenarios for V2
     setScenarios([
       {
         id: 'A',
-        name: 'Explicit Memory 기반 질문',
-        question: '갑상선암 발생률을 바꾸면 영향을 받는 상품은?',
+        name: '가정 변경 영향도 분석',
+        question: '갑상선암 발생률을 변경하면 어떤 상품들이 영향을 받나요?',
         expectedCategory: 'explicit_memory',
-        description: '상품과 가정의 연결 관계를 탐색해야 하는 질문'
+        description: '가정 변경시 영향받는 상품 파악'
       },
       {
         id: 'B',
-        name: 'Precomputed Statistics 기반 질문',
-        question: '2024년 판매 갑상선암 상품들의 보험료 통계는?',
+        name: '재무 지표 필터링',
+        question: '2024년 출시된 상품 중 IRR이 12% 이상인 상품을 보여주세요',
         expectedCategory: 'precomputed_statistics',
-        description: '사전 계산된 통계를 조회해야 하는 질문'
+        description: '조건에 맞는 상품 검색'
+      },
+      {
+        id: 'C',
+        name: '상품 비교 분석',
+        question: 'PROD001과 PROD002 상품의 2024년 실적을 비교해주세요',
+        expectedCategory: 'precomputed_statistics',
+        description: '여러 상품의 지표 비교'
+      },
+      {
+        id: 'D',
+        name: '연도별 실적 비교',
+        question: '2023년 대비 2024년 실적이 어떻게 변했나요?',
+        expectedCategory: 'precomputed_statistics',
+        description: '연도별 성과 비교'
       }
     ]);
   }, []);
@@ -114,25 +128,49 @@ function App() {
   };
 
   const formatSingleExecution = (execution) => {
+    // Handle V2 response format
+    if (!execution.success) {
+      return (
+        <div className="bg-red-50 p-4 rounded">
+          <h4 className="font-semibold mb-2">오류 발생</h4>
+          {execution.needsMoreInfo ? (
+            <div>
+              <p className="text-sm mb-2">추가 정보가 필요합니다:</p>
+              <ul className="list-disc list-inside text-sm">
+                {execution.missingInfo?.map((info, idx) => (
+                  <li key={idx}>{info}</li>
+                ))}
+              </ul>
+            </div>
+          ) : (
+            <p className="text-sm">{execution.error || execution.message || '처리 중 오류가 발생했습니다'}</p>
+          )}
+        </div>
+      );
+    }
+
     return (
       <div className="space-y-4">
         <div className="bg-blue-50 p-4 rounded">
           <h4 className="font-semibold mb-2">함수 선택</h4>
           <p className="text-sm mb-1">
-            <span className="font-medium">선택된 함수:</span> {execution.functionSelection.selectedFunction}
+            <span className="font-medium">선택된 함수:</span> {execution.functionSelection?.selectedFunction}
           </p>
           <p className="text-sm mb-1">
-            <span className="font-medium">카테고리:</span> {execution.executionPath.category}
+            <span className="font-medium">파라미터:</span> {JSON.stringify(execution.functionSelection?.parameters)}
           </p>
           <p className="text-sm">
-            <span className="font-medium">이유:</span> {execution.functionSelection.reasoning}
+            <span className="font-medium">이유:</span> {execution.functionSelection?.reasoning}
           </p>
         </div>
 
         <div className="bg-green-50 p-4 rounded">
           <h4 className="font-semibold mb-2">검색 결과</h4>
           <p className="text-sm mb-1">
-            <span className="font-medium">결과 수:</span> {execution.executionPath.resultCount}개
+            <span className="font-medium">쿼리 타입:</span> {execution.retrievalResult?.queryType}
+          </p>
+          <p className="text-sm mb-1">
+            <span className="font-medium">결과 수:</span> {execution.retrievalResult?.resultCount || execution.executionPath?.resultCount}개
           </p>
           <p className="text-sm">
             <span className="font-medium">실행 시간:</span> {execution.executionTimeMs}ms
@@ -255,6 +293,9 @@ function App() {
           <div>
             <div className="bg-white rounded-lg shadow p-6">
               <h2 className="text-lg font-semibold mb-4">테스트 시나리오</h2>
+              <p className="text-xs text-gray-600 mb-3">
+                💡 시스템은 이 예시 외에도 다양한 질문을 처리할 수 있습니다
+              </p>
               <div className="space-y-3">
                 {scenarios.map((scenario) => (
                   <div
@@ -269,9 +310,6 @@ function App() {
                     <h3 className="font-medium text-sm">{scenario.name}</h3>
                     <p className="text-xs text-gray-600 mt-1">
                       {scenario.question}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      예상 카테고리: {scenario.expectedCategory}
                     </p>
                   </div>
                 ))}
@@ -296,6 +334,10 @@ function App() {
                         <div key={f.name} className="border-l-2 border-blue-200 pl-2">
                           <p className="font-medium">{f.name}</p>
                           <p className="text-gray-600">{f.description}</p>
+                          <div className="text-xs text-gray-500 mt-1">
+                            필수: {f.requiredParams.join(', ') || '없음'}<br/>
+                            선택: {f.optionalParams.join(', ') || '없음'}
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -307,6 +349,10 @@ function App() {
                         <div key={f.name} className="border-l-2 border-green-200 pl-2">
                           <p className="font-medium">{f.name}</p>
                           <p className="text-gray-600">{f.description}</p>
+                          <div className="text-xs text-gray-500 mt-1">
+                            필수: {f.requiredParams.join(', ') || '없음'}<br/>
+                            선택: {f.optionalParams.join(', ') || '없음'}
+                          </div>
                         </div>
                       ))}
                     </div>
