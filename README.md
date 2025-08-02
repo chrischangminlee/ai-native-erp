@@ -32,16 +32,19 @@ LLM 기반 Retrieval AI Agent의 정보 탐색 방식을 비교하는 실험 플
 
 ## 설치 및 실행
 
-1. Gemini API 키 설정:
+1. 의존성 설치:
 ```bash
-cd llm-retrieval-experiment/frontend
+npm install
+```
+
+2. Gemini API 키 설정:
+```bash
 cp .env.example .env
 # .env 파일을 열어 VITE_GEMINI_API_KEY에 실제 API 키 입력
 ```
 
-2. 의존성 설치 및 실행:
+3. 개발 서버 실행:
 ```bash
-npm install
 npm run dev
 ```
 
@@ -56,60 +59,6 @@ npm run dev
 ## API 키 발급
 
 [Google AI Studio](https://makersuite.google.com/app/apikey)에서 Gemini API 키를 발급받을 수 있습니다.
-
-## 주요 기능과 데이터 구조
-
-### Explicit Memory 구조
-```json
-{
-  "productAssumptionConnections": [
-    {
-      "productId": "PROD001",
-      "productName": "갑상선암 건강보험 A",
-      "assumptions": [
-        {
-          "assumptionName": "갑상선암 발생률",
-          "baseValue": 0.0025
-        }
-      ],
-      "designHistory": [...]
-    }
-  ],
-  "assumptionRelationships": [
-    {
-      "assumptionId": "ASMP001",
-      "relatedProducts": ["PROD001", "PROD002", "PROD003"],
-      "impactLevel": "HIGH"
-    }
-  ]
-}
-```
-**중요성**: 한 가정의 변경이 여러 상품에 미치는 파급 효과를 즉시 파악 가능
-
-### Precomputed Statistics 구조
-```json
-{
-  "productStatistics": {
-    "2024": {
-      "thyroidCancerProducts": [
-        {
-          "productId": "PROD001",
-          "financialMetrics": {
-            "IRR": 0.125,
-            "profitMargin": 0.22,
-            "lossRatio": 0.45
-          },
-          "premiumStats": {
-            "averageMonthlyPremium": 35000,
-            "totalPremiumCollected": 1250000000
-          }
-        }
-      ]
-    }
-  }
-}
-```
-**중요성**: 검증된 재무 지표로 즉각적인 비즈니스 의사결정 지원
 
 ## 실험 시나리오와 기대 효과
 
