@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { executeQuery } from './geminiService';
 import { getFunctionDescriptions } from './retrievalFunctions';
+import explicitMemory from './data/explicitMemory.json';
+import precomputedStats from './data/precomputedStatistics.json';
 
 function App() {
   const [question, setQuestion] = useState('');
@@ -165,20 +167,37 @@ function App() {
           </p>
         </div>
 
+        {results && (
+          <div className="bg-white rounded-lg shadow p-6 mb-8">
+            <h2 className="text-xl font-semibold mb-4">실행 결과</h2>
+            <div className="mb-4 p-3 bg-gray-50 rounded">
+              <p className="text-sm">
+                <span className="font-medium">질문:</span> {results.question}
+              </p>
+              <p className="text-sm">
+                <span className="font-medium">타임스탬프:</span> {results.timestamp}
+              </p>
+            </div>
+            {formatResults(results)}
+          </div>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
           <div className="lg:col-span-2">
             <div className="bg-white rounded-lg shadow p-6">
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium mb-2">
-                    질문 입력
+                    프롬프트 입력
                   </label>
                   <textarea
                     value={question}
                     onChange={(e) => setQuestion(e.target.value)}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 cursor-not-allowed"
                     rows="3"
-                    placeholder="질문을 입력하세요..."
+                    placeholder="데모를 위한 우측 2개의 테스트 시나리오 중 1개를 클릭하세요."
+                    disabled
+                    readOnly
                   />
                 </div>
 
@@ -190,7 +209,7 @@ function App() {
                       onChange={(e) => setExecuteInParallel(e.target.checked)}
                       className="mr-2"
                     />
-                    <span className="text-sm">병렬 실행 (일관성 테스트)</span>
+                    <span className="text-sm">&lt;&lt; 같은 프롬프트를 2회 실행하여 결과 일관성 테스트</span>
                   </label>
                 </div>
 
@@ -242,20 +261,69 @@ function App() {
           </div>
         </div>
 
-        {results && (
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold mb-4">실행 결과</h2>
-            <div className="mb-4 p-3 bg-gray-50 rounded">
-              <p className="text-sm">
-                <span className="font-medium">질문:</span> {results.question}
-              </p>
-              <p className="text-sm">
-                <span className="font-medium">타임스탬프:</span> {results.timestamp}
-              </p>
+        <div className="bg-white rounded-lg shadow p-6">
+          <h2 className="text-xl font-semibold mb-6">시스템 보유 정보검색 함수 & 데이터</h2>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div>
+              <h3 className="text-lg font-medium mb-3">검색 함수 (10개)</h3>
+              <div className="bg-gray-50 p-4 rounded">
+                <div className="space-y-2">
+                  <div>
+                    <p className="text-sm font-medium text-blue-600">Explicit Memory 함수 (6개)</p>
+                    <ul className="text-xs text-gray-700 ml-4 mt-1">
+                      <li>• findProductsByAssumption</li>
+                      <li>• getProductDesignHistory</li>
+                      <li>• getAssumptionRelationships</li>
+                      <li>• searchProductByKeyword</li>
+                    </ul>
+                  </div>
+                  <div className="mt-3">
+                    <p className="text-sm font-medium text-green-600">Statistics 함수 (6개)</p>
+                    <ul className="text-xs text-gray-700 ml-4 mt-1">
+                      <li>• getProductPremiumStatistics</li>
+                      <li>• getFinancialMetrics</li>
+                      <li>• getRiskMetrics</li>
+                      <li>• getContractStatistics</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
             </div>
-            {formatResults(results)}
+
+            <div>
+              <h3 className="text-lg font-medium mb-3">Explicit Memory 데이터</h3>
+              <div className="bg-blue-50 p-4 rounded">
+                <p className="text-xs font-medium mb-2">관계형 컨텍스트 정보:</p>
+                <ul className="text-xs text-gray-700 space-y-1">
+                  <li>• 상품 수: {explicitMemory.productAssumptionConnections.length}개</li>
+                  <li>• 가정 관계: {explicitMemory.assumptionRelationships.length}개</li>
+                  <li>• 주요 가정: 갑상선암 발생률, 사망률, 해약률</li>
+                  <li>• 설계 이력 추적 가능</li>
+                </ul>
+                <p className="text-xs text-gray-600 mt-2">
+                  💡 가정 변경 시 영향받는 상품 파악
+                </p>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-medium mb-3">Precomputed Statistics</h3>
+              <div className="bg-green-50 p-4 rounded">
+                <p className="text-xs font-medium mb-2">사전 계산된 비즈니스 지표:</p>
+                <ul className="text-xs text-gray-700 space-y-1">
+                  <li>• 2024년 상품: {precomputedStats.productStatistics['2024'].thyroidCancerProducts.length + precomputedStats.productStatistics['2024'].allHealthProducts.length}개</li>
+                  <li>• 재무 지표: IRR, 수익률, 손해율</li>
+                  <li>• 보험료 통계: 평균, 최소, 최대</li>
+                  <li>• 리스크 지표: 클레임 빈도/금액</li>
+                </ul>
+                <p className="text-xs text-gray-600 mt-2">
+                  💡 즉각적인 비즈니스 의사결정 지원
+                </p>
+              </div>
+            </div>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
