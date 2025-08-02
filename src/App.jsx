@@ -323,7 +323,7 @@ function App() {
                 <div className="bg-white/50 p-3 rounded space-y-2">
                   <div className="flex items-start">
                     <div className="text-blue-600 mr-2">📊</div>
-                    <div>
+                    <div className="w-full">
                       <p className="text-xs font-medium">상품-가정 연결 관계</p>
                       <p className="text-xs text-gray-600">상품 {explicitMemory?.productAssumptionConnections?.length || 0}개가 가정과 연결</p>
                       <p className="text-xs text-gray-500">→ 가정 변경 시 영향 범위 즉시 파악</p>
@@ -332,7 +332,7 @@ function App() {
                   
                   <div className="flex items-start">
                     <div className="text-blue-600 mr-2">🔗</div>
-                    <div>
+                    <div className="w-full">
                       <p className="text-xs font-medium">가정 간 상호 의존성</p>
                       <p className="text-xs text-gray-600">{explicitMemory?.assumptionRelationships?.length || 0}개의 관계 정의</p>
                       <p className="text-xs text-gray-500">→ 연쇄 영향도 분석 가능</p>
@@ -341,11 +341,24 @@ function App() {
                   
                   <div className="flex items-start">
                     <div className="text-blue-600 mr-2">📝</div>
-                    <div>
+                    <div className="w-full">
                       <p className="text-xs font-medium">설계 변경 이력</p>
                       <p className="text-xs text-gray-600">각 상품의 변경 내역과 담당자 추적</p>
                       <p className="text-xs text-gray-500">→ 의사결정 과정 투명성 확보</p>
                     </div>
+                  </div>
+                </div>
+                
+                {/* 실제 관계 데이터 예시 */}
+                <div className="bg-blue-100/50 p-2 rounded">
+                  <p className="text-xs font-medium mb-1">실제 데이터 예시:</p>
+                  <div className="space-y-1 text-xs">
+                    {explicitMemory?.productAssumptionConnections?.slice(0, 2).map((product, idx) => (
+                      <div key={idx} className="bg-white/70 p-1 rounded">
+                        <p className="font-medium">{product.productName}</p>
+                        <p className="text-gray-600">연결된 가정: {product.assumptions.map(a => a.assumptionName).join(', ')}</p>
+                      </div>
+                    ))}
                   </div>
                 </div>
                 
@@ -365,7 +378,7 @@ function App() {
                 <div className="bg-white/50 p-3 rounded space-y-2">
                   <div className="flex items-start">
                     <div className="text-green-600 mr-2">💰</div>
-                    <div>
+                    <div className="w-full">
                       <p className="text-xs font-medium">재무 성과 지표</p>
                       <p className="text-xs text-gray-600">IRR, 수익률, 손해율 등 핵심 KPI</p>
                       <p className="text-xs text-gray-500">→ 수익성 평가 및 투자 결정</p>
@@ -374,7 +387,7 @@ function App() {
                   
                   <div className="flex items-start">
                     <div className="text-green-600 mr-2">📈</div>
-                    <div>
+                    <div className="w-full">
                       <p className="text-xs font-medium">보험료 통계</p>
                       <p className="text-xs text-gray-600">2024년 {precomputedStats?.productStatistics?.['2024'] ? 
                         (precomputedStats.productStatistics['2024'].thyroidCancerProducts.length + 
@@ -385,7 +398,7 @@ function App() {
                   
                   <div className="flex items-start">
                     <div className="text-green-600 mr-2">⚠️</div>
-                    <div>
+                    <div className="w-full">
                       <p className="text-xs font-medium">리스크 지표</p>
                       <p className="text-xs text-gray-600">클레임 빈도, 평균 지급액 통계</p>
                       <p className="text-xs text-gray-500">→ 리스크 관리 및 준비금 설정</p>
@@ -394,11 +407,29 @@ function App() {
                   
                   <div className="flex items-start">
                     <div className="text-green-600 mr-2">📊</div>
-                    <div>
+                    <div className="w-full">
                       <p className="text-xs font-medium">시장 점유율 데이터</p>
                       <p className="text-xs text-gray-600">연도별, 상품유형별 집계 통계</p>
                       <p className="text-xs text-gray-500">→ 전략적 시장 확대 계획 수립</p>
                     </div>
+                  </div>
+                </div>
+                
+                {/* 실제 통계 데이터 예시 */}
+                <div className="bg-green-100/50 p-2 rounded">
+                  <p className="text-xs font-medium mb-1">실제 데이터 예시 (2024년):</p>
+                  <div className="space-y-1 text-xs">
+                    {precomputedStats?.productStatistics?.['2024']?.thyroidCancerProducts?.slice(0, 2).map((product, idx) => (
+                      <div key={idx} className="bg-white/70 p-1 rounded">
+                        <p className="font-medium">{product.productName}</p>
+                        <div className="grid grid-cols-2 gap-1 text-gray-600">
+                          <span>평균 보험료: {(product.premiumStats.averageMonthlyPremium / 1000).toFixed(0)}천원</span>
+                          <span>IRR: {(product.financialMetrics.IRR * 100).toFixed(1)}%</span>
+                          <span>손해율: {(product.financialMetrics.lossRatio * 100).toFixed(0)}%</span>
+                          <span>계약수: {product.contractStats.totalContracts.toLocaleString()}건</span>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
                 
