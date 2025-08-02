@@ -43,7 +43,7 @@ export async function selectRetrievalFunction(userQuestion) {
 
   try {
     const model = genAI.getGenerativeModel({ 
-      model: "gemini-2.0-flash-exp"
+      model: "gemini-2.5-flash"
     });
     
     const result = await model.generateContent(prompt);
@@ -78,7 +78,7 @@ export async function generateResponse(question, retrievalResult) {
   Retrieved Data: ${JSON.stringify(retrievalResult.results, null, 2)}`;
 
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
     
     const result = await model.generateContent(prompt);
     const response = await result.response;
