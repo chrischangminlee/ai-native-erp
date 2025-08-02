@@ -10,6 +10,7 @@ function App() {
   const [results, setResults] = useState(null);
   const [scenarios, setScenarios] = useState([]);
   const [executeInParallel, setExecuteInParallel] = useState(false);
+  const [activeTab, setActiveTab] = useState('experiment'); // 'experiment' or 'system-info'
 
   useEffect(() => {
     // Set test scenarios
@@ -89,7 +90,7 @@ function App() {
 
     if (data.parallelExecution) {
       return (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[500px] overflow-hidden">
           <div className="bg-white p-4 rounded-lg shadow">
             <h3 className="font-semibold text-lg mb-2">실행 1</h3>
             {formatSingleExecution(data.executions[0])}
@@ -101,13 +102,13 @@ function App() {
         </div>
       );
     } else {
-      return formatSingleExecution(data.execution);
+      return <div className="max-h-[450px]">{formatSingleExecution(data.execution)}</div>;
     }
   };
 
   const formatSingleExecution = (execution) => {
     return (
-      <div className="space-y-4">
+      <div className="space-y-4 max-h-96 overflow-y-auto pr-2">
         <div className="bg-blue-50 p-4 rounded">
           <h4 className="font-semibold mb-2">함수 선택</h4>
           <p className="text-sm mb-1">
@@ -138,7 +139,7 @@ function App() {
 
         <details className="bg-yellow-50 p-4 rounded">
           <summary className="cursor-pointer font-semibold">원시 데이터 보기</summary>
-          <pre className="mt-2 text-xs overflow-x-auto">
+          <pre className="mt-2 text-xs overflow-x-auto max-h-64 overflow-y-auto">
             {JSON.stringify(execution.retrievalResult, null, 2)}
           </pre>
         </details>
@@ -167,22 +168,51 @@ function App() {
           </p>
         </div>
 
-        {results && (
-          <div className="bg-white rounded-lg shadow p-6 mb-8">
-            <h2 className="text-xl font-semibold mb-4">실행 결과</h2>
-            <div className="mb-4 p-3 bg-gray-50 rounded">
-              <p className="text-sm">
-                <span className="font-medium">질문:</span> {results.question}
-              </p>
-              <p className="text-sm">
-                <span className="font-medium">타임스탬프:</span> {results.timestamp}
-              </p>
-            </div>
-            {formatResults(results)}
-          </div>
-        )}
+        {/* Tab Navigation */}
+        <div className="border-b border-gray-200 mb-6">
+          <nav className="-mb-px flex space-x-8">
+            <button
+              onClick={() => setActiveTab('experiment')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'experiment'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              실험 플랫폼
+            </button>
+            <button
+              onClick={() => setActiveTab('system-info')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'system-info'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              시스템 보유 정보검색 함수 & 데이터
+            </button>
+          </nav>
+        </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        {/* Tab Content */}
+        {activeTab === 'experiment' ? (
+          <>
+            {results && (
+              <div className="bg-white rounded-lg shadow p-6 mb-8">
+                <h2 className="text-xl font-semibold mb-4">실행 결과</h2>
+                <div className="mb-4 p-3 bg-gray-50 rounded">
+                  <p className="text-sm">
+                    <span className="font-medium">질문:</span> {results.question}
+                  </p>
+                  <p className="text-sm">
+                    <span className="font-medium">타임스탬프:</span> {results.timestamp}
+                  </p>
+                </div>
+                {formatResults(results)}
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
           <div className="lg:col-span-2">
             <div className="bg-white rounded-lg shadow p-6">
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -260,11 +290,12 @@ function App() {
             </div>
           </div>
         </div>
-
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold mb-6">시스템 보유 정보검색 함수 & 데이터</h2>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          </>
+        ) : (
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-xl font-semibold mb-6">시스템 보유 정보검색 함수 & 데이터</h2>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div>
               <h3 className="text-lg font-medium mb-3">검색 함수 (10개)</h3>
               <div className="bg-gray-50 p-4 rounded">
@@ -324,6 +355,7 @@ function App() {
             </div>
           </div>
         </div>
+        )}
       </div>
     </div>
   );

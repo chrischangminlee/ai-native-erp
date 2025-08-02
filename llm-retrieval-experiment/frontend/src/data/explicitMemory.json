@@ -129,19 +129,5 @@
         }
       ]
     }
-  ],
-  "assumptionRelationships": [
-    {
-      "assumptionId": "ASMP001",
-      "relatedProducts": ["PROD001", "PROD002", "PROD003"],
-      "impactLevel": "HIGH",
-      "description": "갑상선암 발생률 변경 시 CI 상품 및 종합건강보험에 직접적 영향"
-    },
-    {
-      "assumptionId": "ASMP002",
-      "relatedProducts": ["PROD001", "PROD004"],
-      "impactLevel": "HIGH",
-      "description": "사망률 변경 시 생명보험 상품에 영향"
-    }
   ]
 }
