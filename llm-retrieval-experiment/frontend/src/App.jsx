@@ -214,7 +214,7 @@ function App() {
                   <textarea
                     value={question}
                     onChange={(e) => setQuestion(e.target.value)}
-                    className="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 cursor-not-allowed"
+                    className="w-full p-3 border border-gray-400 rounded-lg bg-gray-200 cursor-not-allowed text-gray-600"
                     rows="3"
                     placeholder="데모를 위한 우측 2개의 테스트 시나리오 중 1개를 클릭하세요."
                     disabled
