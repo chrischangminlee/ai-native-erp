@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import { executeQuery } from './mockLLMService';
+import { getFunctionDescriptions } from './retrievalFunctions';
 
 function App() {
   const [question, setQuestion] = useState('');
@@ -9,17 +10,24 @@ function App() {
   const [executeInParallel, setExecuteInParallel] = useState(false);
 
   useEffect(() => {
-    fetchScenarios();
+    // Set test scenarios
+    setScenarios([
+      {
+        id: 'A',
+        name: 'Explicit Memory 기반 질문',
+        question: '갑상선암 발생률을 바꾸면 영향을 받는 상품은?',
+        expectedCategory: 'explicit_memory',
+        description: '상품과 가정의 연결 관계를 탐색해야 하는 질문'
+      },
+      {
+        id: 'B',
+        name: 'Precomputed Statistics 기반 질문',
+        question: '2024년 판매 갑상선암 상품들의 보험료 통계는?',
+        expectedCategory: 'precomputed_statistics',
+        description: '사전 계산된 통계를 조회해야 하는 질문'
+      }
+    ]);
   }, []);
-
-  const fetchScenarios = async () => {
-    try {
-      const response = await axios.get('/api/test-scenarios');
-      setScenarios(response.data.scenarios);
-    } catch (error) {
-      console.error('Error fetching scenarios:', error);
-    }
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -27,13 +35,29 @@ function App() {
 
     setLoading(true);
     try {
-      const response = await axios.post('/api/chat', {
-        question,
-        executeInParallel
-      });
-      setResults(response.data);
+      if (executeInParallel) {
+        const [execution1, execution2] = await Promise.all([
+          executeQuery(question),
+          executeQuery(question)
+        ]);
+        
+        setResults({
+          question,
+          parallelExecution: true,
+          executions: [execution1, execution2],
+          timestamp: new Date().toISOString()
+        });
+      } else {
+        const result = await executeQuery(question);
+        setResults({
+          question,
+          parallelExecution: false,
+          execution: result,
+          timestamp: new Date().toISOString()
+        });
+      }
     } catch (error) {
-      console.error('Error submitting question:', error);
+      console.error('Error processing question:', error);
       alert('Error processing request');
     } finally {
       setLoading(false);
@@ -113,6 +137,13 @@ function App() {
           LLM Retrieval 실험 플랫폼
         </h1>
 
+        <div className="bg-yellow-100 border-l-4 border-yellow-500 p-4 mb-6">
+          <p className="text-sm">
+            <strong>데모 모드:</strong> 이 버전은 백엔드 없이 작동하는 프론트엔드 전용 데모입니다. 
+            실제 LLM 대신 키워드 기반 매칭을 사용합니다.
+          </p>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
           <div className="lg:col-span-2">
             <div className="bg-white rounded-lg shadow p-6">
@@ -170,6 +201,19 @@ function App() {
                     <p className="text-xs text-gray-500 mt-1">
                       예상 카테고리: {scenario.expectedCategory}
                     </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg shadow p-6 mt-4">
+              <h2 className="text-lg font-semibold mb-4">사용 가능한 함수</h2>
+              <div className="text-xs space-y-2 max-h-64 overflow-y-auto">
+                {getFunctionDescriptions().map((func) => (
+                  <div key={func.name} className="border-b pb-2">
+                    <p className="font-medium">{func.name}</p>
+                    <p className="text-gray-600">{func.description}</p>
+                    <p className="text-gray-500">카테고리: {func.category}</p>
                   </div>
                 ))}
               </div>

@@ -1,0 +1,6 @@
+{
+  "outputDirectory": "llm-retrieval-experiment/frontend/dist",
+  "installCommand": "cd llm-retrieval-experiment/frontend && npm install",
+  "buildCommand": "cd llm-retrieval-experiment/frontend && npm run build",
+  "framework": null
+}

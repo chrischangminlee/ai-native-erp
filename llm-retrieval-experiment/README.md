@@ -1,6 +1,6 @@
-# LLM Retrieval 실험 플랫폼
+# LLM Retrieval 실험 플랫폼 (Frontend Demo)
 
-LLM 기반 Retrieval AI Agent의 정보 탐색 방식을 비교하는 실험 플랫폼입니다.
+LLM 기반 Retrieval AI Agent의 정보 탐색 방식을 비교하는 실험 플랫폼의 프론트엔드 전용 데모 버전입니다.
 
 ## 실험 목적
 
@@ -8,28 +8,26 @@ LLM 기반 Retrieval AI Agent의 정보 탐색 방식을 비교하는 실험 플
 - Explicit Memory 기반 탐색과 Precomputed Statistics 기반 탐색의 차이를 비교
 - 동일 질문을 병렬 실행하여 처리 경로와 응답 결과의 일관성을 검증
 
+## 데모 버전 특징
+
+이 버전은 백엔드 없이 작동하는 프론트엔드 전용 데모입니다:
+- 실제 LLM API 대신 키워드 기반 매칭 사용
+- 모든 데이터와 로직이 브라우저에서 실행
+- Vercel 등 정적 호스팅 서비스에 바로 배포 가능
+
 ## 설치 및 실행
 
-### 1. Backend 설정
-
 ```bash
-cd backend
-npm install
-
-# .env 파일 생성 후 Gemini API 키 설정
-cp .env.example .env
-# GEMINI_API_KEY=your_key_here 추가
-
-npm run dev
-```
-
-### 2. Frontend 설정
-
-```bash
-cd frontend
+cd llm-retrieval-experiment/frontend
 npm install
 npm run dev
 ```
+
+## Vercel 배포
+
+1. GitHub에 코드 푸시
+2. Vercel에서 GitHub 저장소 연결
+3. 자동으로 빌드 및 배포 완료
 
 ## 주요 기능
 
