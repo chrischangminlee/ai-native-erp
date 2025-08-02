@@ -12,6 +12,13 @@ function App() {
   const [executeInParallel, setExecuteInParallel] = useState(false);
   const [activeTab, setActiveTab] = useState('experiment'); // 'experiment' or 'system-info'
 
+  // Debug: Check if data is loaded
+  useEffect(() => {
+    console.log('Explicit Memory data:', explicitMemory);
+    console.log('Precomputed Stats data:', precomputedStats);
+    console.log('Function descriptions:', getFunctionDescriptions());
+  }, []);
+
   useEffect(() => {
     // Set test scenarios
     setScenarios([
@@ -90,7 +97,7 @@ function App() {
 
     if (data.parallelExecution) {
       return (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[500px] overflow-hidden">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="bg-white p-4 rounded-lg shadow">
             <h3 className="font-semibold text-lg mb-2">실행 1</h3>
             {formatSingleExecution(data.executions[0])}
@@ -102,13 +109,13 @@ function App() {
         </div>
       );
     } else {
-      return <div className="max-h-[450px]">{formatSingleExecution(data.execution)}</div>;
+      return formatSingleExecution(data.execution);
     }
   };
 
   const formatSingleExecution = (execution) => {
     return (
-      <div className="space-y-4 max-h-96 overflow-y-auto pr-2">
+      <div className="space-y-4">
         <div className="bg-blue-50 p-4 rounded">
           <h4 className="font-semibold mb-2">함수 선택</h4>
           <p className="text-sm mb-1">
@@ -139,7 +146,7 @@ function App() {
 
         <details className="bg-yellow-50 p-4 rounded">
           <summary className="cursor-pointer font-semibold">원시 데이터 보기</summary>
-          <pre className="mt-2 text-xs overflow-x-auto max-h-64 overflow-y-auto">
+          <pre className="mt-2 text-xs overflow-x-auto">
             {JSON.stringify(execution.retrievalResult, null, 2)}
           </pre>
         </details>
@@ -188,21 +195,6 @@ function App() {
         {/* Tab Content */}
         {activeTab === 'experiment' ? (
           <>
-            {results && (
-              <div className="bg-white rounded-lg shadow p-6 mb-8">
-                <h2 className="text-xl font-semibold mb-4">실행 결과</h2>
-                <div className="mb-4 p-3 bg-gray-50 rounded">
-                  <p className="text-sm">
-                    <span className="font-medium">질문:</span> {results.question}
-                  </p>
-                  <p className="text-sm">
-                    <span className="font-medium">타임스탬프:</span> {results.timestamp}
-                  </p>
-                </div>
-                {formatResults(results)}
-              </div>
-            )}
-
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
           <div className="lg:col-span-2">
             <div className="bg-white rounded-lg shadow p-6">
@@ -243,6 +235,21 @@ function App() {
                 </button>
               </form>
             </div>
+            
+            {results && (
+              <div className="bg-white rounded-lg shadow p-6 mt-6">
+                <h2 className="text-xl font-semibold mb-4">실행 결과</h2>
+                <div className="mb-4 p-3 bg-gray-50 rounded">
+                  <p className="text-sm">
+                    <span className="font-medium">질문:</span> {results.question}
+                  </p>
+                  <p className="text-sm">
+                    <span className="font-medium">타임스탬프:</span> {results.timestamp}
+                  </p>
+                </div>
+                {formatResults(results)}
+              </div>
+            )}
           </div>
 
           <div>
@@ -303,8 +310,8 @@ function App() {
               <div className="bg-blue-50 p-4 rounded">
                 <p className="text-xs font-medium mb-2">관계형 컨텍스트 정보:</p>
                 <ul className="text-xs text-gray-700 space-y-1">
-                  <li>• 상품 수: {explicitMemory.productAssumptionConnections.length}개</li>
-                  <li>• 가정 관계: {explicitMemory.assumptionRelationships.length}개</li>
+                  <li>• 상품 수: {explicitMemory?.productAssumptionConnections?.length || 0}개</li>
+                  <li>• 가정 관계: {explicitMemory?.assumptionRelationships?.length || 0}개</li>
                   <li>• 주요 가정: 갑상선암 발생률, 사망률, 해약률</li>
                   <li>• 설계 이력 추적 가능</li>
                 </ul>
@@ -319,7 +326,9 @@ function App() {
               <div className="bg-green-50 p-4 rounded">
                 <p className="text-xs font-medium mb-2">사전 계산된 비즈니스 지표:</p>
                 <ul className="text-xs text-gray-700 space-y-1">
-                  <li>• 2024년 상품: {precomputedStats.productStatistics['2024'].thyroidCancerProducts.length + precomputedStats.productStatistics['2024'].allHealthProducts.length}개</li>
+                  <li>• 2024년 상품: {precomputedStats?.productStatistics?.['2024'] ? 
+                    (precomputedStats.productStatistics['2024'].thyroidCancerProducts.length + 
+                     precomputedStats.productStatistics['2024'].allHealthProducts.length) : 0}개</li>
                   <li>• 재무 지표: IRR, 수익률, 손해율</li>
                   <li>• 보험료 통계: 평균, 최소, 최대</li>
                   <li>• 리스크 지표: 클레임 빈도/금액</li>
