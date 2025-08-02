@@ -331,15 +331,6 @@ function App() {
                   </div>
                   
                   <div className="flex items-start">
-                    <div className="text-blue-600 mr-2">🔗</div>
-                    <div className="w-full">
-                      <p className="text-xs font-medium">가정 간 상호 의존성</p>
-                      <p className="text-xs text-gray-600">{explicitMemory?.assumptionRelationships?.length || 0}개의 관계 정의</p>
-                      <p className="text-xs text-gray-500">→ 연쇄 영향도 분석 가능</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start">
                     <div className="text-blue-600 mr-2">📝</div>
                     <div className="w-full">
                       <p className="text-xs font-medium">설계 변경 이력</p>
@@ -350,10 +341,10 @@ function App() {
                 </div>
                 
                 {/* 실제 관계 데이터 예시 */}
-                <div className="bg-blue-100/50 p-2 rounded">
-                  <p className="text-xs font-medium mb-1">실제 데이터 예시:</p>
+                <div className="bg-blue-100/50 p-2 rounded max-h-48 overflow-y-auto">
+                  <p className="text-xs font-medium mb-1">전체 상품-가정 연결 데이터:</p>
                   <div className="space-y-1 text-xs">
-                    {explicitMemory?.productAssumptionConnections?.slice(0, 2).map((product, idx) => (
+                    {explicitMemory?.productAssumptionConnections?.map((product, idx) => (
                       <div key={idx} className="bg-white/70 p-1 rounded">
                         <p className="font-medium">{product.productName}</p>
                         <p className="text-gray-600">연결된 가정: {product.assumptions.map(a => a.assumptionName).join(', ')}</p>
@@ -416,20 +407,37 @@ function App() {
                 </div>
                 
                 {/* 실제 통계 데이터 예시 */}
-                <div className="bg-green-100/50 p-2 rounded">
-                  <p className="text-xs font-medium mb-1">실제 데이터 예시 (2024년):</p>
+                <div className="bg-green-100/50 p-2 rounded max-h-48 overflow-y-auto">
+                  <p className="text-xs font-medium mb-1">전체 상품 통계 데이터 (2024년):</p>
                   <div className="space-y-1 text-xs">
-                    {precomputedStats?.productStatistics?.['2024']?.thyroidCancerProducts?.slice(0, 2).map((product, idx) => (
-                      <div key={idx} className="bg-white/70 p-1 rounded">
-                        <p className="font-medium">{product.productName}</p>
-                        <div className="grid grid-cols-2 gap-1 text-gray-600">
-                          <span>평균 보험료: {(product.premiumStats.averageMonthlyPremium / 1000).toFixed(0)}천원</span>
-                          <span>IRR: {(product.financialMetrics.IRR * 100).toFixed(1)}%</span>
-                          <span>손해율: {(product.financialMetrics.lossRatio * 100).toFixed(0)}%</span>
-                          <span>계약수: {product.contractStats.totalContracts.toLocaleString()}건</span>
-                        </div>
-                      </div>
-                    ))}
+                    {precomputedStats?.productStatistics?.['2024'] && (
+                      <>
+                        {/* 갑상선암 상품 */}
+                        {precomputedStats.productStatistics['2024'].thyroidCancerProducts?.map((product, idx) => (
+                          <div key={`thyroid-${idx}`} className="bg-white/70 p-1 rounded">
+                            <p className="font-medium">{product.productName}</p>
+                            <div className="grid grid-cols-2 gap-1 text-gray-600">
+                              <span>평균 보험료: {(product.premiumStats.averageMonthlyPremium / 1000).toFixed(0)}천원</span>
+                              <span>IRR: {(product.financialMetrics.IRR * 100).toFixed(1)}%</span>
+                              <span>손해율: {(product.financialMetrics.lossRatio * 100).toFixed(0)}%</span>
+                              <span>계약수: {product.contractStats.totalContracts.toLocaleString()}건</span>
+                            </div>
+                          </div>
+                        ))}
+                        {/* 일반 건강보험 상품 */}
+                        {precomputedStats.productStatistics['2024'].allHealthProducts?.map((product, idx) => (
+                          <div key={`health-${idx}`} className="bg-white/70 p-1 rounded">
+                            <p className="font-medium">{product.productName}</p>
+                            <div className="grid grid-cols-2 gap-1 text-gray-600">
+                              <span>평균 보험료: {(product.premiumStats.averageMonthlyPremium / 1000).toFixed(0)}천원</span>
+                              <span>IRR: {(product.financialMetrics.IRR * 100).toFixed(1)}%</span>
+                              <span>손해율: {(product.financialMetrics.lossRatio * 100).toFixed(0)}%</span>
+                              <span>계약수: {product.contractStats.totalContracts.toLocaleString()}건</span>
+                            </div>
+                          </div>
+                        ))}
+                      </>
+                    )}
                   </div>
                 </div>
                 
