@@ -1,0 +1,185 @@
+{
+  "productStatistics": {
+    "2024": {
+      "thyroidCancerProducts": [
+        {
+          "productId": "PROD001",
+          "productName": "갑상선암 건강보험 A",
+          "salesStartDate": "2024-01-20",
+          "premiumStats": {
+            "averageMonthlyPremium": 35000,
+            "minPremium": 25000,
+            "maxPremium": 55000,
+            "medianPremium": 33000,
+            "totalPremiumCollected": 1250000000,
+            "premiumGrowthRate": 0.08
+          },
+          "contractStats": {
+            "totalContracts": 3500,
+            "newContracts": 3500,
+            "activeContracts": 3400,
+            "lapsedContracts": 100,
+            "averageContractAge": 0.5
+          },
+          "financialMetrics": {
+            "IRR": 0.125,
+            "profitMargin": 0.22,
+            "lossRatio": 0.45,
+            "expenseRatio": 0.33
+          },
+          "riskMetrics": {
+            "claimFrequency": 0.0023,
+            "averageClaimAmount": 5000000,
+            "maxClaimAmount": 15000000,
+            "claimSeverity": "Medium"
+          }
+        },
+        {
+          "productId": "PROD002",
+          "productName": "갑상선암 건강보험 B",
+          "salesStartDate": "2024-02-01",
+          "premiumStats": {
+            "averageMonthlyPremium": 42000,
+            "minPremium": 30000,
+            "maxPremium": 65000,
+            "medianPremium": 40000,
+            "totalPremiumCollected": 980000000,
+            "premiumGrowthRate": 0.10
+          },
+          "contractStats": {
+            "totalContracts": 2800,
+            "newContracts": 2800,
+            "activeContracts": 2730,
+            "lapsedContracts": 70,
+            "averageContractAge": 0.4
+          },
+          "financialMetrics": {
+            "IRR": 0.135,
+            "profitMargin": 0.24,
+            "lossRatio": 0.42,
+            "expenseRatio": 0.34
+          },
+          "riskMetrics": {
+            "claimFrequency": 0.0021,
+            "averageClaimAmount": 5500000,
+            "maxClaimAmount": 18000000,
+            "claimSeverity": "Medium"
+          }
+        }
+      ],
+      "allHealthProducts": [
+        {
+          "productId": "PROD003",
+          "productName": "종합건강보험 플러스",
+          "salesStartDate": "2023-11-10",
+          "premiumStats": {
+            "averageMonthlyPremium": 85000,
+            "minPremium": 60000,
+            "maxPremium": 120000,
+            "medianPremium": 82000,
+            "totalPremiumCollected": 3200000000,
+            "premiumGrowthRate": 0.15
+          },
+          "contractStats": {
+            "totalContracts": 4200,
+            "newContracts": 3800,
+            "activeContracts": 4050,
+            "lapsedContracts": 150,
+            "averageContractAge": 0.8
+          },
+          "financialMetrics": {
+            "IRR": 0.145,
+            "profitMargin": 0.26,
+            "lossRatio": 0.48,
+            "expenseRatio": 0.26
+          },
+          "riskMetrics": {
+            "claimFrequency": 0.0052,
+            "averageClaimAmount": 4500000,
+            "maxClaimAmount": 25000000,
+            "claimSeverity": "High"
+          }
+        }
+      ]
+    },
+    "2023": {
+      "thyroidCancerProducts": [],
+      "allHealthProducts": [
+        {
+          "productId": "PROD003",
+          "productName": "종합건강보험 플러스",
+          "salesStartDate": "2023-11-10",
+          "premiumStats": {
+            "averageMonthlyPremium": 80000,
+            "minPremium": 55000,
+            "maxPremium": 115000,
+            "medianPremium": 78000,
+            "totalPremiumCollected": 450000000,
+            "premiumGrowthRate": 0.0
+          },
+          "contractStats": {
+            "totalContracts": 400,
+            "newContracts": 400,
+            "activeContracts": 395,
+            "lapsedContracts": 5,
+            "averageContractAge": 0.1
+          },
+          "financialMetrics": {
+            "IRR": 0.11,
+            "profitMargin": 0.20,
+            "lossRatio": 0.35,
+            "expenseRatio": 0.45
+          },
+          "riskMetrics": {
+            "claimFrequency": 0.0015,
+            "averageClaimAmount": 3500000,
+            "maxClaimAmount": 8000000,
+            "claimSeverity": "Low"
+          }
+        }
+      ]
+    }
+  },
+  "aggregatedStatistics": {
+    "byProductType": {
+      "CI": {
+        "totalProducts": 2,
+        "totalContracts": 6300,
+        "averagePremium": 38500,
+        "totalPremiumVolume": 2230000000,
+        "averageIRR": 0.13,
+        "averageLossRatio": 0.435
+      },
+      "Health": {
+        "totalProducts": 1,
+        "totalContracts": 4200,
+        "averagePremium": 85000,
+        "totalPremiumVolume": 3200000000,
+        "averageIRR": 0.145,
+        "averageLossRatio": 0.48
+      },
+      "Life": {
+        "totalProducts": 1,
+        "totalContracts": 8500,
+        "averagePremium": 45000,
+        "totalPremiumVolume": 4500000000,
+        "averageIRR": 0.105,
+        "averageLossRatio": 0.38
+      }
+    },
+    "byYear": {
+      "2024": {
+        "totalNewContracts": 10100,
+        "totalPremiumCollected": 5430000000,
+        "averageIRR": 0.135,
+        "productLaunchCount": 3
+      },
+      "2023": {
+        "totalNewContracts": 8900,
+        "totalPremiumCollected": 4950000000,
+        "averageIRR": 0.11,
+        "productLaunchCount": 2
+      }
+    }
+  }
+}
