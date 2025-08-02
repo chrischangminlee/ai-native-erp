@@ -1,8 +1,15 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { retrievalFunctions, getFunctionDescriptions } from './retrievalFunctions';
 
+// Check if API key exists
+const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+if (!apiKey || apiKey === 'your_gemini_api_key_here') {
+  console.error('Gemini API key is not set properly');
+  throw new Error('Gemini API key is missing. Please set VITE_GEMINI_API_KEY in your .env file');
+}
+
 // Initialize Gemini AI
-const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
+const genAI = new GoogleGenerativeAI(apiKey);
 
 export async function selectRetrievalFunction(userQuestion) {
   const functionDescriptions = getFunctionDescriptions();
@@ -35,6 +42,11 @@ export async function selectRetrievalFunction(userQuestion) {
     return JSON.parse(text);
   } catch (error) {
     console.error('Error selecting function:', error);
+    console.error('Error details:', {
+      message: error.message,
+      status: error.status,
+      statusText: error.statusText
+    });
     throw error;
   }
 }
@@ -56,6 +68,11 @@ export async function generateResponse(question, retrievalResult) {
     return response.text();
   } catch (error) {
     console.error('Error generating response:', error);
+    console.error('Error details:', {
+      message: error.message,
+      status: error.status,
+      statusText: error.statusText
+    });
     throw error;
   }
 }

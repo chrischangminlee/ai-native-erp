@@ -58,7 +58,21 @@ function App() {
       }
     } catch (error) {
       console.error('Error processing question:', error);
-      alert('Error processing request');
+      let errorMessage = 'Error processing request';
+      
+      if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      if (error.message?.includes('API key')) {
+        errorMessage = 'Gemini API key is missing or invalid. Please check your .env file.';
+      } else if (error.message?.includes('429')) {
+        errorMessage = 'API rate limit exceeded. Please try again later.';
+      } else if (error.message?.includes('403')) {
+        errorMessage = 'API key is invalid or does not have permission. Please check your Gemini API key.';
+      }
+      
+      alert(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -140,9 +154,14 @@ function App() {
         <div className="bg-blue-100 border-l-4 border-blue-500 p-4 mb-6">
           <p className="text-sm">
             <strong>Gemini AI 모드:</strong> Google Gemini AI를 사용하여 실제 LLM 기반 함수 선택 및 응답을 생성합니다.
-            {!import.meta.env.VITE_GEMINI_API_KEY && 
+            {(!import.meta.env.VITE_GEMINI_API_KEY || import.meta.env.VITE_GEMINI_API_KEY === 'your_gemini_api_key_here') && 
               <span className="text-red-600 block mt-1">⚠️ Gemini API 키가 설정되지 않았습니다.</span>
             }
+            {import.meta.env.DEV && import.meta.env.VITE_GEMINI_API_KEY && (
+              <span className="text-green-600 block mt-1 text-xs">
+                ✓ API Key loaded (Dev mode): {import.meta.env.VITE_GEMINI_API_KEY.substring(0, 10)}...
+              </span>
+            )}
           </p>
         </div>
 
