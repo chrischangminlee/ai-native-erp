@@ -259,7 +259,11 @@ function App() {
                 {scenarios.map((scenario) => (
                   <div
                     key={scenario.id}
-                    className="p-3 bg-gray-50 rounded cursor-pointer hover:bg-gray-100"
+                    className={`p-3 rounded cursor-pointer ${
+                      scenario.expectedCategory === 'explicit_memory' 
+                        ? 'bg-green-50 hover:bg-green-100' 
+                        : 'bg-blue-50 hover:bg-blue-100'
+                    }`}
                     onClick={() => selectScenario(scenario)}
                   >
                     <h3 className="font-medium text-sm">{scenario.name}</h3>
@@ -287,19 +291,25 @@ function App() {
                 <div className="space-y-2">
                   <div>
                     <p className="text-sm font-medium text-blue-600">Explicit Memory 함수</p>
-                    <ul className="text-xs text-gray-700 ml-4 mt-1">
+                    <div className="text-xs text-gray-700 ml-2 mt-1 space-y-2">
                       {getFunctionDescriptions().filter(f => f.category === 'explicit_memory').map(f => (
-                        <li key={f.name}>• {f.name}</li>
+                        <div key={f.name} className="border-l-2 border-blue-200 pl-2">
+                          <p className="font-medium">{f.name}</p>
+                          <p className="text-gray-600">{f.description}</p>
+                        </div>
                       ))}
-                    </ul>
+                    </div>
                   </div>
                   <div className="mt-3">
                     <p className="text-sm font-medium text-green-600">Statistics 함수</p>
-                    <ul className="text-xs text-gray-700 ml-4 mt-1">
+                    <div className="text-xs text-gray-700 ml-2 mt-1 space-y-2">
                       {getFunctionDescriptions().filter(f => f.category === 'precomputed_statistics').map(f => (
-                        <li key={f.name}>• {f.name}</li>
+                        <div key={f.name} className="border-l-2 border-green-200 pl-2">
+                          <p className="font-medium">{f.name}</p>
+                          <p className="text-gray-600">{f.description}</p>
+                        </div>
                       ))}
-                    </ul>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -307,35 +317,96 @@ function App() {
 
             <div>
               <h3 className="text-lg font-medium mb-3">Explicit Memory 데이터</h3>
-              <div className="bg-blue-50 p-4 rounded">
-                <p className="text-xs font-medium mb-2">관계형 컨텍스트 정보:</p>
-                <ul className="text-xs text-gray-700 space-y-1">
-                  <li>• 상품 수: {explicitMemory?.productAssumptionConnections?.length || 0}개</li>
-                  <li>• 가정 관계: {explicitMemory?.assumptionRelationships?.length || 0}개</li>
-                  <li>• 주요 가정: 갑상선암 발생률, 사망률, 해약률</li>
-                  <li>• 설계 이력 추적 가능</li>
-                </ul>
-                <p className="text-xs text-gray-600 mt-2">
-                  💡 가정 변경 시 영향받는 상품 파악
-                </p>
+              <div className="bg-blue-50 p-4 rounded space-y-3">
+                <p className="text-xs font-medium">관계형 컨텍스트 정보:</p>
+                
+                <div className="bg-white/50 p-3 rounded space-y-2">
+                  <div className="flex items-start">
+                    <div className="text-blue-600 mr-2">📊</div>
+                    <div>
+                      <p className="text-xs font-medium">상품-가정 연결 관계</p>
+                      <p className="text-xs text-gray-600">상품 {explicitMemory?.productAssumptionConnections?.length || 0}개가 가정과 연결</p>
+                      <p className="text-xs text-gray-500">→ 가정 변경 시 영향 범위 즉시 파악</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start">
+                    <div className="text-blue-600 mr-2">🔗</div>
+                    <div>
+                      <p className="text-xs font-medium">가정 간 상호 의존성</p>
+                      <p className="text-xs text-gray-600">{explicitMemory?.assumptionRelationships?.length || 0}개의 관계 정의</p>
+                      <p className="text-xs text-gray-500">→ 연쇄 영향도 분석 가능</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start">
+                    <div className="text-blue-600 mr-2">📝</div>
+                    <div>
+                      <p className="text-xs font-medium">설계 변경 이력</p>
+                      <p className="text-xs text-gray-600">각 상품의 변경 내역과 담당자 추적</p>
+                      <p className="text-xs text-gray-500">→ 의사결정 과정 투명성 확보</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="border-t border-blue-200 pt-2">
+                  <p className="text-xs text-blue-700 font-medium">
+                    💡 핵심 가치: "What-if" 분석을 위한 관계 네트워크
+                  </p>
+                </div>
               </div>
             </div>
 
             <div>
               <h3 className="text-lg font-medium mb-3">Precomputed Statistics</h3>
-              <div className="bg-green-50 p-4 rounded">
-                <p className="text-xs font-medium mb-2">사전 계산된 비즈니스 지표:</p>
-                <ul className="text-xs text-gray-700 space-y-1">
-                  <li>• 2024년 상품: {precomputedStats?.productStatistics?.['2024'] ? 
-                    (precomputedStats.productStatistics['2024'].thyroidCancerProducts.length + 
-                     precomputedStats.productStatistics['2024'].allHealthProducts.length) : 0}개</li>
-                  <li>• 재무 지표: IRR, 수익률, 손해율</li>
-                  <li>• 보험료 통계: 평균, 최소, 최대</li>
-                  <li>• 리스크 지표: 클레임 빈도/금액</li>
-                </ul>
-                <p className="text-xs text-gray-600 mt-2">
-                  💡 즉각적인 비즈니스 의사결정 지원
-                </p>
+              <div className="bg-green-50 p-4 rounded space-y-3">
+                <p className="text-xs font-medium">사전 계산된 비즈니스 지표:</p>
+                
+                <div className="bg-white/50 p-3 rounded space-y-2">
+                  <div className="flex items-start">
+                    <div className="text-green-600 mr-2">💰</div>
+                    <div>
+                      <p className="text-xs font-medium">재무 성과 지표</p>
+                      <p className="text-xs text-gray-600">IRR, 수익률, 손해율 등 핵심 KPI</p>
+                      <p className="text-xs text-gray-500">→ 수익성 평가 및 투자 결정</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start">
+                    <div className="text-green-600 mr-2">📈</div>
+                    <div>
+                      <p className="text-xs font-medium">보험료 통계</p>
+                      <p className="text-xs text-gray-600">2024년 {precomputedStats?.productStatistics?.['2024'] ? 
+                        (precomputedStats.productStatistics['2024'].thyroidCancerProducts.length + 
+                         precomputedStats.productStatistics['2024'].allHealthProducts.length) : 0}개 상품 분석</p>
+                      <p className="text-xs text-gray-500">→ 가격 경쟁력 및 시장 포지셔닝</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start">
+                    <div className="text-green-600 mr-2">⚠️</div>
+                    <div>
+                      <p className="text-xs font-medium">리스크 지표</p>
+                      <p className="text-xs text-gray-600">클레임 빈도, 평균 지급액 통계</p>
+                      <p className="text-xs text-gray-500">→ 리스크 관리 및 준비금 설정</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start">
+                    <div className="text-green-600 mr-2">📊</div>
+                    <div>
+                      <p className="text-xs font-medium">시장 점유율 데이터</p>
+                      <p className="text-xs text-gray-600">연도별, 상품유형별 집계 통계</p>
+                      <p className="text-xs text-gray-500">→ 전략적 시장 확대 계획 수립</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="border-t border-green-200 pt-2">
+                  <p className="text-xs text-green-700 font-medium">
+                    💡 핵심 가치: 신속한 의사결정을 위한 검증된 지표
+                  </p>
+                </div>
               </div>
             </div>
           </div>
