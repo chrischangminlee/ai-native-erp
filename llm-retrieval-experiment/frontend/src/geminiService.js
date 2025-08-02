@@ -20,26 +20,43 @@ export async function selectRetrievalFunction(userQuestion) {
   Available functions:
   ${functionDescriptions.map(f => `- ${f.name}: ${f.description} (Category: ${f.category})`).join('\n')}
   
-  Respond with a JSON object containing:
-  - selectedFunction: the function name
-  - parameters: object with required parameters
-  - reasoning: brief explanation of why this function was selected
+  Analyze the user's question and determine which function would best answer it.
   
-  User Question: ${userQuestion}`;
+  Your response must be a valid JSON object with this exact structure:
+  {
+    "selectedFunction": "function_name_here",
+    "parameters": {
+      "param1": "value1",
+      "param2": "value2"
+    },
+    "reasoning": "brief explanation of why this function was selected"
+  }
+  
+  Important:
+  - For questions about "갑상선암 발생률" changes, use findProductsByAssumption with assumptionName: "갑상선암 발생률"
+  - For questions about "보험료 통계", use getProductPremiumStatistics with year: "2024" and productType: "thyroidCancer"
+  - Always include appropriate parameters based on the question
+  
+  User Question: ${userQuestion}
+  
+  Response (JSON only):`;
 
   try {
     const model = genAI.getGenerativeModel({ 
-      model: "gemini-2.0-flash-exp",
-      generationConfig: {
-        responseMimeType: "application/json"
-      }
+      model: "gemini-2.0-flash-exp"
     });
     
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const text = response.text();
     
-    return JSON.parse(text);
+    // Parse the response text as JSON
+    try {
+      return JSON.parse(text);
+    } catch (parseError) {
+      console.error('Failed to parse JSON response:', text);
+      throw new Error('Invalid JSON response from Gemini');
+    }
   } catch (error) {
     console.error('Error selecting function:', error);
     console.error('Error details:', {
