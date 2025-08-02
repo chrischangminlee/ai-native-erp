@@ -9,7 +9,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState(null);
   const [scenarios, setScenarios] = useState([]);
-  const [executeInParallel, setExecuteInParallel] = useState(false);
+  const [executeInParallel, setExecuteInParallel] = useState(true);
   const [activeTab, setActiveTab] = useState('experiment'); // 'experiment' or 'system-info'
 
   // Debug: Check if data is loaded
