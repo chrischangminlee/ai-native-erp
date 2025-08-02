@@ -149,11 +149,42 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-100">
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold text-center mb-8">
-          LLM Retrieval 실험 플랫폼
-        </h1>
+      {/* GNB */}
+      <header className="bg-white shadow-sm border-b border-gray-200">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center h-16">
+            <h1 className="text-xl font-bold mr-8">
+              LLM Retrieval 실험 플랫폼
+            </h1>
+            
+            {/* Tab Navigation in GNB */}
+            <nav className="flex space-x-8">
+              <button
+                onClick={() => setActiveTab('experiment')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'experiment'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                실험 플랫폼
+              </button>
+              <button
+                onClick={() => setActiveTab('system-info')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'system-info'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                시스템 보유 정보검색 함수 & 데이터
+              </button>
+            </nav>
+          </div>
+        </div>
+      </header>
 
+      <div className="container mx-auto px-4 py-8">
         <div className="bg-blue-100 border-l-4 border-blue-500 p-4 mb-6">
           <p className="text-sm">
             <strong>Gemini AI 모드:</strong> Google Gemini AI를 사용하여 실제 LLM 기반 함수 선택 및 응답을 생성합니다.
@@ -166,32 +197,6 @@ function App() {
               </span>
             )}
           </p>
-        </div>
-
-        {/* Tab Navigation */}
-        <div className="border-b border-gray-200 mb-6">
-          <nav className="-mb-px flex space-x-8">
-            <button
-              onClick={() => setActiveTab('experiment')}
-              className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'experiment'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              실험 플랫폼
-            </button>
-            <button
-              onClick={() => setActiveTab('system-info')}
-              className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'system-info'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              시스템 보유 정보검색 함수 & 데이터
-            </button>
-          </nav>
         </div>
 
         {/* Tab Content */}
@@ -271,19 +276,6 @@ function App() {
                     <p className="text-xs text-gray-500 mt-1">
                       예상 카테고리: {scenario.expectedCategory}
                     </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="bg-white rounded-lg shadow p-6 mt-4">
-              <h2 className="text-lg font-semibold mb-4">사용 가능한 함수</h2>
-              <div className="text-xs space-y-2 max-h-64 overflow-y-auto">
-                {getFunctionDescriptions().map((func) => (
-                  <div key={func.name} className="border-b pb-2">
-                    <p className="font-medium">{func.name}</p>
-                    <p className="text-gray-600">{func.description}</p>
-                    <p className="text-gray-500">카테고리: {func.category}</p>
                   </div>
                 ))}
               </div>
