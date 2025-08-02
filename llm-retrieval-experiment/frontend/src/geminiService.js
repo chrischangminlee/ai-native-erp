@@ -15,31 +15,24 @@ export async function selectRetrievalFunction(userQuestion) {
   const functionDescriptions = getFunctionDescriptions();
   
   const prompt = `You are a function selector for an insurance product information system.
-  Given a user question, select the most appropriate retrieval function.
   
   Available functions:
   ${functionDescriptions.map(f => `- ${f.name}: ${f.description} (Category: ${f.category})`).join('\n')}
   
-  Analyze the user's question and determine which function would best answer it.
-  
-  Your response must be a valid JSON object with this exact structure:
-  {
-    "selectedFunction": "function_name_here",
-    "parameters": {
-      "param1": "value1",
-      "param2": "value2"
-    },
-    "reasoning": "brief explanation of why this function was selected"
-  }
-  
-  Important:
-  - For questions about "갑상선암 발생률" changes, use findProductsByAssumption with assumptionName: "갑상선암 발생률"
-  - For questions about "보험료 통계", use getProductPremiumStatistics with year: "2024" and productType: "thyroidCancer"
-  - Always include appropriate parameters based on the question
-  
   User Question: ${userQuestion}
   
-  Response (JSON only):`;
+  Select the most appropriate function and return ONLY a JSON object (no other text).
+  
+  Example response format:
+  {"selectedFunction": "findProductsByAssumption", "parameters": {"assumptionName": "갑상선암 발생률"}, "reasoning": "The user asks about products affected by thyroid cancer rate changes"}
+  
+  Guidelines:
+  - For "갑상선암 발생률" questions → use findProductsByAssumption
+  - For "보험료 통계" questions → use getProductPremiumStatistics
+  - For "설계 이력" questions → use getProductDesignHistory
+  - For "재무 지표" or "IRR" questions → use getFinancialMetrics
+  
+  Return only valid JSON, no explanations or markdown.`;
 
   try {
     const model = genAI.getGenerativeModel({ 
@@ -50,12 +43,42 @@ export async function selectRetrievalFunction(userQuestion) {
     const response = await result.response;
     const text = response.text();
     
-    // Parse the response text as JSON
+    console.log('Raw Gemini response:', text);
+    
+    // Try to extract JSON from the response
+    let jsonText = text.trim();
+    
+    // If the response contains markdown code blocks, extract the JSON
+    const jsonMatch = text.match(/```json\n?([\s\S]*?)\n?```/);
+    if (jsonMatch) {
+      jsonText = jsonMatch[1].trim();
+    }
+    
+    // Try to parse the response text as JSON
     try {
-      return JSON.parse(text);
+      const parsed = JSON.parse(jsonText);
+      console.log('Parsed response:', parsed);
+      return parsed;
     } catch (parseError) {
       console.error('Failed to parse JSON response:', text);
-      throw new Error('Invalid JSON response from Gemini');
+      console.error('Parse error:', parseError);
+      
+      // Fallback: try to use a default based on the question
+      if (userQuestion.includes('갑상선암 발생률')) {
+        return {
+          selectedFunction: 'findProductsByAssumption',
+          parameters: { assumptionName: '갑상선암 발생률' },
+          reasoning: 'Fallback: Question mentions thyroid cancer incidence rate'
+        };
+      } else if (userQuestion.includes('보험료 통계')) {
+        return {
+          selectedFunction: 'getProductPremiumStatistics',
+          parameters: { year: '2024', productType: 'thyroidCancer' },
+          reasoning: 'Fallback: Question mentions premium statistics'
+        };
+      }
+      
+      throw new Error('Invalid JSON response from Gemini: ' + text.substring(0, 200));
     }
   } catch (error) {
     console.error('Error selecting function:', error);
