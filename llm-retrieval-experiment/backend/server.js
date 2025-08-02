@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import OpenAI from 'openai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import dotenv from 'dotenv';
 import { retrievalFunctions, getFunctionDescriptions } from './retrievalFunctions.js';
 
@@ -12,14 +12,12 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 async function selectRetrievalFunction(userQuestion) {
   const functionDescriptions = getFunctionDescriptions();
   
-  const systemPrompt = `You are a function selector for an insurance product information system.
+  const prompt = `You are a function selector for an insurance product information system.
   Given a user question, select the most appropriate retrieval function.
   
   Available functions:
@@ -28,19 +26,23 @@ async function selectRetrievalFunction(userQuestion) {
   Respond with a JSON object containing:
   - selectedFunction: the function name
   - parameters: object with required parameters
-  - reasoning: brief explanation of why this function was selected`;
+  - reasoning: brief explanation of why this function was selected
+  
+  User Question: ${userQuestion}`;
 
   try {
-    const completion = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userQuestion }
-      ],
-      response_format: { type: "json_object" }
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-2.0-flash-exp",
+      generationConfig: {
+        responseMimeType: "application/json"
+      }
     });
-
-    return JSON.parse(completion.choices[0].message.content);
+    
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
+    
+    return JSON.parse(text);
   } catch (error) {
     console.error('Error selecting function:', error);
     throw error;
@@ -48,20 +50,20 @@ async function selectRetrievalFunction(userQuestion) {
 }
 
 async function generateResponse(question, retrievalResult) {
-  const systemPrompt = `You are an insurance product information assistant.
+  const prompt = `You are an insurance product information assistant.
   Based on the retrieval results, provide a clear and concise answer to the user's question.
-  Use the data provided to give specific information.`;
+  Use the data provided to give specific information.
+  
+  Question: ${question}
+  
+  Retrieved Data: ${JSON.stringify(retrievalResult.results, null, 2)}`;
 
   try {
-    const completion = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: `Question: ${question}\n\nRetrieved Data: ${JSON.stringify(retrievalResult.results, null, 2)}` }
-      ]
-    });
-
-    return completion.choices[0].message.content;
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+    
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    return response.text();
   } catch (error) {
     console.error('Error generating response:', error);
     throw error;

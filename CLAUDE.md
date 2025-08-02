@@ -28,7 +28,7 @@ npm run preview # Preview production build
 ### Environment Setup
 Create `.env` file in backend directory:
 ```
-OPENAI_API_KEY=your_openai_api_key_here
+GEMINI_API_KEY=your_gemini_api_key_here
 PORT=3001
 ```
 
@@ -36,12 +36,12 @@ PORT=3001
 
 ### System Flow
 ```
-User Query → Frontend (React) → Backend API → OpenAI (Function Selection) → Retrieval Function → JSON Data → OpenAI (Response Generation) → User
+User Query → Frontend (React) → Backend API → Gemini (Function Selection) → Retrieval Function → JSON Data → Gemini (Response Generation) → User
 ```
 
 ### Key Architectural Decisions
 
-1. **Function Selection Pattern**: The system uses GPT-3.5-turbo to analyze user questions and select from 10 predefined retrieval functions based on their descriptions.
+1. **Function Selection Pattern**: The system uses Gemini 2.0 Flash to analyze user questions and select from 10 predefined retrieval functions based on their descriptions.
 
 2. **Data Segregation**: 
    - `explicitMemory.json`: Product-assumption connections, design history (for relationship queries)

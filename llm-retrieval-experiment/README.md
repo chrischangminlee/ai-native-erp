@@ -16,9 +16,9 @@ LLM 기반 Retrieval AI Agent의 정보 탐색 방식을 비교하는 실험 플
 cd backend
 npm install
 
-# .env 파일 생성 후 OpenAI API 키 설정
+# .env 파일 생성 후 Gemini API 키 설정
 cp .env.example .env
-# OPENAI_API_KEY=your_key_here 추가
+# GEMINI_API_KEY=your_key_here 추가
 
 npm run dev
 ```
