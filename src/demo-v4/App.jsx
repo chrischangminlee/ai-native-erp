@@ -810,8 +810,8 @@ function App() {
                     <div>
                       <strong>Retrieval Function 실행</strong>
                       <ul className="list-disc list-inside mt-2 ml-4 text-gray-600">
-                        <li>명시적 기억: 상품-가정 관계 데이터 즉시 조회</li>
-                        <li>사전계산 통계: 연도별/상품별 집계 데이터 바로 반환</li>
+                        <li>명시적 기억: 상품-가정 관계 데이터 즉시 조회. 참고해야할 DB를 찾을 수 있게 방향성을 제시합니다.</li>
+                        <li>사전계산 통계: 연도별/상품별 집계 데이터 바로 반환. AI가 통계적인 답변을 추론하는 대신, 검증된 값을 직접 참조하게 하여 답변의 속도와 정확성을 극대화합니다.</li>
                       </ul>
                     </div>
                   </li>
@@ -830,15 +830,15 @@ function App() {
                   <div className="bg-blue-50 p-4 rounded-lg">
                     <h3 className="font-semibold text-blue-800 mb-2">명시적 기억 (Explicit Memory):</h3>
                     <p className="text-gray-700">
-                      보험 상품과 계리 가정 간의 복잡한 관계를 명시적으로 저장하여, 
-                      가정과 상품의 관계 정보를 즉시 조회
+                      보험 상품과 계리 가정 간의 관계를 명시적으로 저장하여 맥락전달.  
+                      AI가 방대한 데이터의 바다를 항해하는 대신 참고해야할 DB를 찾을 수 있게 방향성을 제시합니다.
                     </p>
                   </div>
                   <div className="bg-green-50 p-4 rounded-lg">
                     <h3 className="font-semibold text-green-800 mb-2">사전계산 통계 (Precomputed Statistics):</h3>
                     <p className="text-gray-700">
                       방대한 보험 데이터를 미리 연도별/상품별로 집계하여, 
-                      수익성 분석이나 추세 파악을 위한 복잡한 계산 없이 즉시 인사이트 제공
+                      AI가 통계적인 답변을 추론하는 대신, 검증된 값을 직접 참조하게 하여 답변의 속도와 정확성을 극대화합니다.
                     </p>
                   </div>
                 </div>
