@@ -10,12 +10,14 @@
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { retrievalFunctions, getFunctionDescriptions } from './retrievalFunctions';
+import entityMappings from './data/entityMappings.json';
 
 export class LLMService {
   constructor(apiKey) {
     this.genAI = new GoogleGenerativeAI(apiKey);
     this.model = this.genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
     this.functionDescriptions = getFunctionDescriptions();
+    this.entityMappings = entityMappings;
   }
 
   /**
@@ -23,13 +25,22 @@ export class LLMService {
    */
   async processQuery(userQuery, enableDebug = true) {
     try {
-      // Step 1: Understand query and extract parameters
-      const understanding = await this.understandQuery(userQuery);
+      // Step 1: Extract entities from the query
+      const extractedEntities = await this.extractEntities(userQuery);
       
-      // Step 2: Execute retrieval functions
+      // Step 2: Resolve entities to codes using fuzzy matching
+      const resolvedEntities = this.resolveEntities(extractedEntities);
+      
+      // Step 3: Confirm entity matches if needed
+      const confirmedEntities = await this.confirmEntityMatches(userQuery, resolvedEntities);
+      
+      // Step 4: Understand query intent and required functions
+      const understanding = await this.understandQuery(userQuery, confirmedEntities);
+      
+      // Step 5: Execute retrieval functions
       const retrievalResults = await this.executeRetrievals(understanding);
       
-      // Step 3: Generate response
+      // Step 6: Generate response
       const response = await this.generateResponse(
         userQuery, 
         understanding, 
@@ -40,6 +51,9 @@ export class LLMService {
         success: true,
         response: response,
         debug: enableDebug ? {
+          extractedEntities,
+          resolvedEntities,
+          confirmedEntities,
           understanding,
           retrievalResults,
           functionsUsed: retrievalResults.map(r => r.functionName)
@@ -55,9 +69,197 @@ export class LLMService {
   }
 
   /**
-   * Step 1: Understand the query and extract parameters
+   * Step 1: Extract entities from the user query
    */
-  async understandQuery(userQuery) {
+  async extractEntities(userQuery) {
+    const prompt = `
+Extract potential entities (assumptions, products, categories) from this query:
+"${userQuery}"
+
+Return a JSON object with:
+{
+  "assumptions": ["extracted assumption terms"],
+  "products": ["extracted product terms"],
+  "categories": ["extracted category terms"],
+  "years": ["extracted years"],
+  "otherTerms": ["other relevant terms"]
+}
+
+Extract actual terms from the query, not codes. For example:
+- If user says "할인률", extract "할인률"
+- If user says "갑상선암 보험", extract "갑상선암 보험"
+`;
+
+    const result = await this.model.generateContent(prompt);
+    const text = result.response.text();
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    return jsonMatch ? JSON.parse(jsonMatch[0]) : {};
+  }
+
+  /**
+   * Step 2: Resolve extracted entities to codes using fuzzy matching
+   */
+  resolveEntities(extractedEntities) {
+    const resolved = {
+      assumptions: [],
+      products: [],
+      categories: []
+    };
+
+    // Resolve assumptions
+    if (extractedEntities.assumptions) {
+      extractedEntities.assumptions.forEach(term => {
+        const match = this.findBestMatch(term, 'assumptions');
+        if (match) {
+          resolved.assumptions.push(match);
+        }
+      });
+    }
+
+    // Resolve products
+    if (extractedEntities.products) {
+      extractedEntities.products.forEach(term => {
+        const match = this.findBestMatch(term, 'products');
+        if (match) {
+          resolved.products.push(match);
+        }
+      });
+    }
+
+    // Resolve categories
+    if (extractedEntities.categories) {
+      extractedEntities.categories.forEach(term => {
+        const match = this.findBestMatch(term, 'categories');
+        if (match) {
+          resolved.categories.push(match);
+        }
+      });
+    }
+
+    // Copy other data
+    resolved.years = extractedEntities.years || [];
+    resolved.otherTerms = extractedEntities.otherTerms || [];
+
+    return resolved;
+  }
+
+  /**
+   * Find best match for a term in entity mappings
+   */
+  findBestMatch(term, entityType) {
+    const termLower = term.toLowerCase().replace(/\s+/g, '');
+    const entities = this.entityMappings[entityType];
+    
+    for (const [code, entity] of Object.entries(entities)) {
+      // Check primary name
+      if (entity.primaryName.toLowerCase().replace(/\s+/g, '') === termLower) {
+        return {
+          code,
+          matchedTerm: term,
+          primaryName: entity.primaryName,
+          confidence: 1.0,
+          matchType: 'exact'
+        };
+      }
+      
+      // Check aliases
+      for (const alias of entity.aliases || []) {
+        if (alias.toLowerCase().replace(/\s+/g, '') === termLower) {
+          return {
+            code,
+            matchedTerm: term,
+            primaryName: entity.primaryName,
+            confidence: 0.9,
+            matchType: 'alias'
+          };
+        }
+      }
+    }
+    
+    // Fuzzy match - check if term is contained in names/aliases
+    for (const [code, entity] of Object.entries(entities)) {
+      const allNames = [entity.primaryName, ...(entity.aliases || [])];
+      for (const name of allNames) {
+        const nameLower = name.toLowerCase().replace(/\s+/g, '');
+        if (nameLower.includes(termLower) || termLower.includes(nameLower)) {
+          return {
+            code,
+            matchedTerm: term,
+            primaryName: entity.primaryName,
+            confidence: 0.7,
+            matchType: 'fuzzy'
+          };
+        }
+      }
+    }
+    
+    return null;
+  }
+
+  /**
+   * Step 3: Confirm entity matches with LLM
+   */
+  async confirmEntityMatches(userQuery, resolvedEntities) {
+    // Only confirm if there are fuzzy matches or low confidence matches
+    const needsConfirmation = [
+      ...resolvedEntities.assumptions,
+      ...resolvedEntities.products,
+      ...resolvedEntities.categories
+    ].some(match => match && match.confidence < 0.9);
+
+    if (!needsConfirmation) {
+      return resolvedEntities;
+    }
+
+    const prompt = `
+User asked: "${userQuery}"
+
+I found these potential matches:
+${JSON.stringify(resolvedEntities, null, 2)}
+
+Please confirm if these matches are correct based on the context of the query.
+Return the same structure but set confirmed: true/false for each match.
+
+For example, if user said "할인률" and we matched it to "할인율", that's correct (confirmed: true).
+But if the match seems wrong based on context, set confirmed: false.
+`;
+
+    const result = await this.model.generateContent(prompt);
+    const text = result.response.text();
+    
+    // For now, if confirmation fails, just return original resolved entities
+    try {
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const confirmed = JSON.parse(jsonMatch[0]);
+        // Filter out non-confirmed matches
+        return {
+          assumptions: (confirmed.assumptions || []).filter(m => m.confirmed !== false),
+          products: (confirmed.products || []).filter(m => m.confirmed !== false),
+          categories: (confirmed.categories || []).filter(m => m.confirmed !== false),
+          years: resolvedEntities.years,
+          otherTerms: resolvedEntities.otherTerms
+        };
+      }
+    } catch (e) {
+      // If parsing fails, return original
+    }
+    
+    return resolvedEntities;
+  }
+
+  /**
+   * Step 4: Understand the query and extract parameters
+   */
+  async understandQuery(userQuery, confirmedEntities) {
+    // Convert confirmed entities to codes
+    const entityCodes = {
+      assumptionCodes: confirmedEntities.assumptions.map(a => a.code),
+      productCodes: confirmedEntities.products.map(p => p.code),
+      categoryCodes: confirmedEntities.categories.map(c => c.code),
+      years: confirmedEntities.years
+    };
+
     const prompt = `
 You are analyzing a business query about insurance products. Extract the following information:
 
@@ -66,6 +268,12 @@ ${JSON.stringify(this.functionDescriptions, null, 2)}
 
 User Query: "${userQuery}"
 
+Resolved Entities:
+${JSON.stringify(confirmedEntities, null, 2)}
+
+Entity Codes to Use:
+${JSON.stringify(entityCodes, null, 2)}
+
 Extract and return a JSON object with:
 {
   "intent": "What the user wants to know",
@@ -73,26 +281,17 @@ Extract and return a JSON object with:
     {
       "functionName": "exact function name from available functions",
       "parameters": {
-        "paramName": "extracted value"
+        "paramName": "value from entity codes"
       },
       "reason": "why this function is needed"
     }
   ],
-  "extractedEntities": {
-    "assumptionCodes": ["C51", etc],
-    "productCodes": ["PROD-001", etc],
-    "years": ["2024", etc],
-    "aggregationType": "year or category",
-    "otherParameters": {}
-  }
+  "extractedEntities": ${JSON.stringify(entityCodes)}
 }
 
-Known mappings:
-- 갑상선암 발생률 → assumptionCode: "C51"
-- 갑상선암 건강보험 A → productCode: "PROD-001"
-- 종합건강보험 B → productCode: "PROD-002"
-- 종합건강보험 C → productCode: "PROD-003"
-- 갑상선암 건강보험 D → productCode: "PROD-004"
+Use the entity codes provided above when selecting parameters. For example:
+- If the user asks about an assumption, use the assumptionCode from the resolved entities
+- If the user asks about a product, use the productCode from the resolved entities
 
 Be precise with function selection and parameter extraction.`;
 
@@ -109,7 +308,7 @@ Be precise with function selection and parameter extraction.`;
   }
 
   /**
-   * Step 2: Execute the required retrieval functions
+   * Step 5: Execute the required retrieval functions
    */
   async executeRetrievals(understanding) {
     const results = [];
@@ -138,7 +337,7 @@ Be precise with function selection and parameter extraction.`;
   }
 
   /**
-   * Step 3: Generate natural language response
+   * Step 6: Generate natural language response
    */
   async generateResponse(userQuery, understanding, retrievalResults) {
     const prompt = `

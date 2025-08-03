@@ -3,6 +3,7 @@ import { LLMService } from './llmService';
 import { getFunctionDescriptions, retrievalFunctions } from './retrievalFunctions';
 import explicitMemory from './data/explicitProductAssumptionMemory.json';
 import precomputedStats from './data/precomputedStatistics.json';
+import entityMappings from './data/entityMappings.json';
 
 function App() {
   const [llmService, setLlmService] = useState(null);
@@ -157,6 +158,26 @@ function App() {
             >
               데이터 구조
             </button>
+            <button
+              onClick={() => setActiveTab('mappings')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'mappings'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              엔티티 매핑
+            </button>
+            <button
+              onClick={() => setActiveTab('experiment')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'experiment'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              실험 내용
+            </button>
           </nav>
         </div>
 
@@ -241,15 +262,42 @@ function App() {
                     <h3 className="font-bold text-lg mb-4">디버그 정보</h3>
                     
                     <div className="space-y-4">
+                      {response.debug.extractedEntities && (
+                        <div>
+                          <h4 className="font-medium mb-2">1. 추출된 엔티티:</h4>
+                          <pre className="bg-white p-3 rounded text-xs overflow-x-auto">
+                            {JSON.stringify(response.debug.extractedEntities, null, 2)}
+                          </pre>
+                        </div>
+                      )}
+                      
+                      {response.debug.resolvedEntities && (
+                        <div>
+                          <h4 className="font-medium mb-2">2. 매칭된 엔티티:</h4>
+                          <pre className="bg-white p-3 rounded text-xs overflow-x-auto">
+                            {JSON.stringify(response.debug.resolvedEntities, null, 2)}
+                          </pre>
+                        </div>
+                      )}
+                      
+                      {response.debug.confirmedEntities && (
+                        <div>
+                          <h4 className="font-medium mb-2">3. 확인된 엔티티:</h4>
+                          <pre className="bg-white p-3 rounded text-xs overflow-x-auto">
+                            {JSON.stringify(response.debug.confirmedEntities, null, 2)}
+                          </pre>
+                        </div>
+                      )}
+                      
                       <div>
-                        <h4 className="font-medium mb-2">쿼리 이해:</h4>
+                        <h4 className="font-medium mb-2">4. 쿼리 이해:</h4>
                         <pre className="bg-white p-3 rounded text-xs overflow-x-auto">
                           {JSON.stringify(response.debug.understanding, null, 2)}
                         </pre>
                       </div>
                       
                       <div>
-                        <h4 className="font-medium mb-2">사용된 함수:</h4>
+                        <h4 className="font-medium mb-2">5. 사용된 함수:</h4>
                         <div className="flex flex-wrap gap-2">
                           {response.debug.functionsUsed.map((func, idx) => (
                             <span key={idx} className="bg-blue-100 text-blue-800 px-3 py-1 rounded text-sm">
@@ -260,7 +308,7 @@ function App() {
                       </div>
                       
                       <div>
-                        <h4 className="font-medium mb-2">검색 결과:</h4>
+                        <h4 className="font-medium mb-2">6. 검색 결과:</h4>
                         <pre className="bg-white p-3 rounded text-xs overflow-x-auto">
                           {JSON.stringify(response.debug.retrievalResults, null, 2)}
                         </pre>
@@ -310,9 +358,16 @@ function App() {
                     </div>
                     {expandedItems.has(`func-${func.name}`) && (
                       <div className="ml-4 mt-2 p-4 bg-gray-50 rounded border-l-4 border-gray-300">
-                        <h4 className="font-mono font-bold text-sm mb-2">함수 구현:</h4>
+                        <h4 className="font-mono font-bold text-sm mb-2">전체 함수 정의:</h4>
                         <pre className="bg-white p-3 rounded overflow-x-auto text-xs border">
-                          {retrievalFunctions[func.name]?.execute?.toString() || 'Function implementation not found'}
+                          {JSON.stringify({
+                            name: retrievalFunctions[func.name]?.name,
+                            description: retrievalFunctions[func.name]?.description,
+                            requiredKeys: retrievalFunctions[func.name]?.requiredKeys,
+                            optionalKeys: retrievalFunctions[func.name]?.optionalKeys,
+                            dataSource: retrievalFunctions[func.name]?.dataSource,
+                            execute: retrievalFunctions[func.name]?.execute?.toString()
+                          }, null, 2)}
                         </pre>
                       </div>
                     )}
@@ -467,6 +522,282 @@ function App() {
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Mappings Tab */}
+        {activeTab === 'mappings' && (
+          <div className="max-w-6xl mx-auto">
+            <div className="grid gap-6 lg:grid-cols-2">
+              {/* Assumptions Mappings */}
+              <div className="bg-white p-6 rounded-lg shadow">
+                <h2 className="text-xl font-bold mb-4">가정(Assumption) 매핑</h2>
+                <div className="space-y-3">
+                  {Object.entries(entityMappings.assumptions).map(([code, mapping]) => (
+                    <div key={code}>
+                      <div 
+                        className="cursor-pointer hover:bg-gray-50 p-2 rounded"
+                        onClick={() => toggleExpanded(`mapping-assumption-${code}`)}
+                      >
+                        <div className="flex items-start">
+                          <code className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm font-mono mr-3">
+                            {code}
+                          </code>
+                          <div className="flex-1">
+                            <div className="font-medium">{mapping.primaryName}</div>
+                            <div className="text-sm text-gray-600 mt-1">
+                              {mapping.aliases.slice(0, 3).join(', ')}
+                              {mapping.aliases.length > 3 && ` 외 ${mapping.aliases.length - 3}개`}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      {expandedItems.has(`mapping-assumption-${code}`) && (
+                        <div className="ml-4 mt-2 p-3 bg-gray-50 rounded text-sm">
+                          <div className="mb-2">
+                            <span className="font-medium">카테고리:</span> {mapping.category}
+                          </div>
+                          <div className="mb-2">
+                            <span className="font-medium">설명:</span> {mapping.description}
+                          </div>
+                          <div>
+                            <span className="font-medium">모든 별칭:</span>
+                            <div className="mt-1 flex flex-wrap gap-1">
+                              {mapping.aliases.map((alias, idx) => (
+                                <span key={idx} className="bg-gray-200 px-2 py-1 rounded text-xs">
+                                  {alias}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Products Mappings */}
+              <div className="bg-white p-6 rounded-lg shadow">
+                <h2 className="text-xl font-bold mb-4">상품(Product) 매핑</h2>
+                <div className="space-y-3">
+                  {Object.entries(entityMappings.products).map(([code, mapping]) => (
+                    <div key={code}>
+                      <div 
+                        className="cursor-pointer hover:bg-gray-50 p-2 rounded"
+                        onClick={() => toggleExpanded(`mapping-product-${code}`)}
+                      >
+                        <div className="flex items-start">
+                          <code className="bg-green-100 text-green-800 px-2 py-1 rounded text-sm font-mono mr-3">
+                            {code}
+                          </code>
+                          <div className="flex-1">
+                            <div className="font-medium">{mapping.primaryName}</div>
+                            <div className="text-sm text-gray-600 mt-1">
+                              {mapping.aliases.slice(0, 3).join(', ')}
+                              {mapping.aliases.length > 3 && ` 외 ${mapping.aliases.length - 3}개`}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      {expandedItems.has(`mapping-product-${code}`) && (
+                        <div className="ml-4 mt-2 p-3 bg-gray-50 rounded text-sm">
+                          <div className="mb-2">
+                            <span className="font-medium">카테고리:</span> {mapping.category}
+                          </div>
+                          <div className="mb-2">
+                            <span className="font-medium">출시일:</span> {mapping.launchDate}
+                          </div>
+                          <div>
+                            <span className="font-medium">모든 별칭:</span>
+                            <div className="mt-1 flex flex-wrap gap-1">
+                              {mapping.aliases.map((alias, idx) => (
+                                <span key={idx} className="bg-gray-200 px-2 py-1 rounded text-xs">
+                                  {alias}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Categories Section */}
+            <div className="mt-6 bg-white p-6 rounded-lg shadow">
+              <h2 className="text-xl font-bold mb-4">카테고리(Category) 매핑</h2>
+              <div className="grid gap-4 md:grid-cols-2">
+                {Object.entries(entityMappings.categories).map(([code, mapping]) => (
+                  <div key={code}>
+                    <div 
+                      className="cursor-pointer hover:bg-gray-50 p-3 rounded border border-gray-200"
+                      onClick={() => toggleExpanded(`mapping-category-${code}`)}
+                    >
+                      <div className="flex items-start">
+                        <code className="bg-purple-100 text-purple-800 px-2 py-1 rounded text-sm font-mono mr-3">
+                          {code}
+                        </code>
+                        <div className="flex-1">
+                          <div className="font-medium">{mapping.primaryName}</div>
+                          <div className="text-sm text-gray-600 mt-1">
+                            포함 상품: {mapping.products.join(', ')}
+                          </div>
+                        </div>
+                      </div>
+                      {expandedItems.has(`mapping-category-${code}`) && (
+                        <div className="mt-3 pt-3 border-t">
+                          <div className="text-sm">
+                            <span className="font-medium">모든 별칭:</span>
+                            <div className="mt-1 flex flex-wrap gap-1">
+                              {mapping.aliases.map((alias, idx) => (
+                                <span key={idx} className="bg-gray-200 px-2 py-1 rounded text-xs">
+                                  {alias}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Experiment Tab */}
+        {activeTab === 'experiment' && (
+          <div className="max-w-4xl mx-auto">
+            <div className="bg-white p-8 rounded-lg shadow">
+              <h1 className="text-2xl font-bold mb-6">
+                명시적 기억과 사전계산 통계를 이용한 보험 기업 AI 활용 방안 Test
+              </h1>
+
+              <section className="mb-8">
+                <h2 className="text-xl font-semibold mb-3 text-blue-600">테스트 목적:</h2>
+                <p className="text-gray-700 leading-relaxed">
+                  자연어 질의를 통해 보험 상품 데이터를 검색하는 LLM 파이프라인 검증
+                </p>
+              </section>
+
+              <section className="mb-8">
+                <h2 className="text-xl font-semibold mb-3 text-blue-600">시스템 처리 단계:</h2>
+                <ol className="space-y-4">
+                  <li className="flex">
+                    <span className="font-bold text-blue-500 mr-3">1.</span>
+                    <div>
+                      <strong>사용자 질의 입력</strong>
+                      <p className="text-gray-600 text-sm mt-1">
+                        (예: "갑상선암 발생률이 변경되면 어떤 상품들이 영향을 받나요?")
+                      </p>
+                    </div>
+                  </li>
+                  <li className="flex">
+                    <span className="font-bold text-blue-500 mr-3">2.</span>
+                    <div>
+                      <strong>LLM 질의 분석</strong> - Gemini API가 질문을 분석하여:
+                      <ul className="list-disc list-inside mt-2 ml-4 text-gray-600">
+                        <li>사용자 의도 파악</li>
+                        <li>명시적 기억 또는 사전계산 통계 중 적절한 데이터 소스 결정</li>
+                        <li>필요한 Retrieval Function 선택</li>
+                        <li>파라미터 추출 (한국어 → 시스템 코드 변환)</li>
+                      </ul>
+                    </div>
+                  </li>
+                  <li className="flex">
+                    <span className="font-bold text-blue-500 mr-3">3.</span>
+                    <div>
+                      <strong>Retrieval Function 실행</strong>
+                      <ul className="list-disc list-inside mt-2 ml-4 text-gray-600">
+                        <li>명시적 기억: 상품-가정 관계 데이터 즉시 조회</li>
+                        <li>사전계산 통계: 연도별/상품별 집계 데이터 바로 반환</li>
+                      </ul>
+                    </div>
+                  </li>
+                  <li className="flex">
+                    <span className="font-bold text-blue-500 mr-3">4.</span>
+                    <div>
+                      <strong>LLM 응답 생성</strong> - 검색 결과를 자연스러운 한국어로 변환
+                    </div>
+                  </li>
+                </ol>
+              </section>
+
+              <section className="mb-8">
+                <h2 className="text-xl font-semibold mb-3 text-blue-600">데이터 구조:</h2>
+                <div className="space-y-4">
+                  <div className="bg-blue-50 p-4 rounded-lg">
+                    <h3 className="font-semibold text-blue-800 mb-2">명시적 기억 (Explicit Memory):</h3>
+                    <p className="text-gray-700">
+                      보험 상품과 계리 가정 간의 복잡한 관계를 그래프 형태로 명시적으로 저장하여, 
+                      가정 변경이 상품에 미치는 영향을 실시간으로 파악
+                    </p>
+                  </div>
+                  <div className="bg-green-50 p-4 rounded-lg">
+                    <h3 className="font-semibold text-green-800 mb-2">사전계산 통계 (Precomputed Statistics):</h3>
+                    <p className="text-gray-700">
+                      방대한 보험 데이터를 미리 연도별/상품별로 집계하여, 
+                      수익성 분석이나 추세 파악을 위한 복잡한 계산 없이 즉시 인사이트 제공
+                    </p>
+                  </div>
+                </div>
+              </section>
+
+              <section className="mb-8">
+                <h2 className="text-xl font-semibold mb-3 text-blue-600">주요 테스트 항목:</h2>
+                <ul className="space-y-3">
+                  <li className="flex items-start">
+                    <span className="text-blue-500 mr-2">•</span>
+                    <div>
+                      <strong>자연어 → 파라미터 변환:</strong>
+                      <p className="text-gray-600 text-sm mt-1">
+                        사용자의 한국어 질문을 시스템 코드(C51, PROD-001 등)로 정확히 매핑하는지 확인
+                      </p>
+                    </div>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-blue-500 mr-2">•</span>
+                    <div>
+                      <strong>Retrieval Function 선택 정확도:</strong>
+                      <p className="text-gray-600 text-sm mt-1">
+                        LLM이 질문 의도를 파악하여 올바른 검색 함수를 선택하는지 검증
+                      </p>
+                    </div>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-blue-500 mr-2">•</span>
+                    <div>
+                      <strong>데이터 검색 및 응답 생성:</strong>
+                      <p className="text-gray-600 text-sm mt-1">
+                        검색된 데이터를 자연스러운 한국어로 변환하여 답변하는지 평가
+                      </p>
+                    </div>
+                  </li>
+                </ul>
+              </section>
+
+              <section>
+                <h2 className="text-xl font-semibold mb-3 text-blue-600">테스트 시나리오:</h2>
+                <div className="space-y-3">
+                  <div className="border-l-4 border-blue-500 pl-4">
+                    <strong>1. 가정(assumption) 변경 시 영향받는 상품 조회</strong>
+                    <p className="text-gray-600 text-sm">(명시적 기억 활용)</p>
+                  </div>
+                  <div className="border-l-4 border-green-500 pl-4">
+                    <strong>2. 연도별 상품 수익성 분석</strong>
+                    <p className="text-gray-600 text-sm">(사전계산 통계 활용)</p>
+                  </div>
+                  <div className="border-l-4 border-green-500 pl-4">
+                    <strong>3. 상품별 보험료 통계 추이 확인</strong>
+                    <p className="text-gray-600 text-sm">(사전계산 통계 활용)</p>
+                  </div>
+                </div>
+              </section>
             </div>
           </div>
         )}

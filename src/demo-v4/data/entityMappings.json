@@ -1,0 +1,142 @@
+{
+  "assumptions": {
+    "C51": {
+      "code": "C51",
+      "primaryName": "갑상선암 발생률",
+      "aliases": [
+        "갑상선암발생률",
+        "갑상선암 발생율",
+        "갑상선암발생율",
+        "thyroid cancer incidence",
+        "thyroid cancer rate"
+      ],
+      "category": "INCIDENCE_RATE",
+      "description": "갑상선암 발생 확률에 대한 가정"
+    },
+    "M01": {
+      "code": "M01",
+      "primaryName": "사망률",
+      "aliases": [
+        "사망율",
+        "mortality rate",
+        "death rate",
+        "사망 확률",
+        "사망확률"
+      ],
+      "category": "MORTALITY_RATE",
+      "description": "일반 사망률에 대한 가정"
+    },
+    "L01": {
+      "code": "L01",
+      "primaryName": "해약률",
+      "aliases": [
+        "해약율",
+        "해지율",
+        "해지률",
+        "lapse rate",
+        "termination rate",
+        "계약해지율",
+        "계약해지률"
+      ],
+      "category": "LAPSE_RATE",
+      "description": "보험 계약 해약률에 대한 가정"
+    },
+    "D01": {
+      "code": "D01",
+      "primaryName": "할인율",
+      "aliases": [
+        "할인률",
+        "discount rate",
+        "이자율",
+        "이자률",
+        "금리"
+      ],
+      "category": "DISCOUNT_RATE",
+      "description": "현재가치 계산을 위한 할인율"
+    }
+  },
+  "products": {
+    "PROD-001": {
+      "code": "PROD-001",
+      "primaryName": "갑상선암 건강보험 A",
+      "aliases": [
+        "갑상선암건강보험A",
+        "갑상선암 보험 A",
+        "갑상선암보험A",
+        "thyroid insurance A",
+        "갑상선 A"
+      ],
+      "category": "thyroidCancer",
+      "launchDate": "2023-01-15"
+    },
+    "PROD-002": {
+      "code": "PROD-002",
+      "primaryName": "종합건강보험 B",
+      "aliases": [
+        "종합건강보험B",
+        "종합 건강보험 B",
+        "종합보험 B",
+        "종합보험B",
+        "comprehensive insurance B",
+        "종건 B"
+      ],
+      "category": "comprehensive",
+      "launchDate": "2023-06-01"
+    },
+    "PROD-003": {
+      "code": "PROD-003",
+      "primaryName": "종합건강보험 C",
+      "aliases": [
+        "종합건강보험C",
+        "종합 건강보험 C",
+        "종합보험 C",
+        "종합보험C",
+        "comprehensive insurance C",
+        "종건 C"
+      ],
+      "category": "comprehensive",
+      "launchDate": "2024-01-10"
+    },
+    "PROD-004": {
+      "code": "PROD-004",
+      "primaryName": "갑상선암 건강보험 D",
+      "aliases": [
+        "갑상선암건강보험D",
+        "갑상선암 보험 D",
+        "갑상선암보험D",
+        "thyroid insurance D",
+        "갑상선 D"
+      ],
+      "category": "thyroidCancer",
+      "launchDate": "2025-05-01"
+    }
+  },
+  "categories": {
+    "thyroidCancer": {
+      "code": "thyroidCancer",
+      "primaryName": "갑상선암 상품",
+      "aliases": [
+        "갑상선암상품",
+        "갑상선암 보험",
+        "갑상선암보험",
+        "갑상선 상품",
+        "thyroid cancer products",
+        "thyroid products"
+      ],
+      "products": ["PROD-001", "PROD-004"]
+    },
+    "comprehensive": {
+      "code": "comprehensive",
+      "primaryName": "종합건강보험",
+      "aliases": [
+        "종합 건강보험",
+        "종합보험",
+        "종합 보험",
+        "종건",
+        "comprehensive health insurance",
+        "comprehensive insurance"
+      ],
+      "products": ["PROD-002", "PROD-003"]
+    }
+  }
+}
