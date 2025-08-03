@@ -15,7 +15,15 @@ function App() {
   const [showDebug, setShowDebug] = useState(true);
 
   useEffect(() => {
-    // Check for API key in localStorage
+    // Check for API key in environment variable first (from Vercel)
+    const envKey = import.meta.env.VITE_GEMINI_API_KEY;
+    if (envKey) {
+      setApiKey(envKey);
+      setLlmService(new LLMService(envKey));
+      return;
+    }
+    
+    // Fall back to localStorage
     const savedKey = localStorage.getItem('gemini_api_key');
     if (savedKey) {
       setApiKey(savedKey);
