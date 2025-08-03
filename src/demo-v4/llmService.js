@@ -23,24 +23,49 @@ export class LLMService {
   /**
    * Process user query and return structured response
    */
-  async processQuery(userQuery, enableDebug = true) {
+  async processQuery(userQuery, enableDebug = true, confirmedTypos = null) {
     try {
       // Step 1: Extract entities from the query
       const extractedEntities = await this.extractEntities(userQuery);
       
-      // Step 2: Resolve entities to codes using fuzzy matching
+      // Check if there are possible typos that need user confirmation
+      if (extractedEntities.possibleTypos && extractedEntities.possibleTypos.length > 0 && !confirmedTypos) {
+        return {
+          success: true,
+          needsConfirmation: true,
+          possibleTypos: extractedEntities.possibleTypos,
+          originalQuery: userQuery,
+          response: this.generateTypoConfirmationMessage(extractedEntities.possibleTypos)
+        };
+      }
+      
+      // If typos were confirmed, apply the corrections
+      if (confirmedTypos) {
+        confirmedTypos.forEach(typo => {
+          if (typo.confirmed) {
+            // Replace the original term with the suggested term in extracted entities
+            ['assumptions', 'products', 'categories'].forEach(type => {
+              if (extractedEntities[type]) {
+                const index = extractedEntities[type].indexOf(typo.original);
+                if (index !== -1) {
+                  extractedEntities[type][index] = typo.suggested;
+                }
+              }
+            });
+          }
+        });
+      }
+      
+      // Step 2: Resolve entities to codes using exact matching
       const resolvedEntities = this.resolveEntities(extractedEntities);
       
-      // Step 3: Confirm entity matches if needed
-      const confirmedEntities = await this.confirmEntityMatches(userQuery, resolvedEntities);
+      // Step 3: Understand query intent and required functions
+      const understanding = await this.understandQuery(userQuery, resolvedEntities);
       
-      // Step 4: Understand query intent and required functions
-      const understanding = await this.understandQuery(userQuery, confirmedEntities);
-      
-      // Step 5: Execute retrieval functions
+      // Step 4: Execute retrieval functions
       const retrievalResults = await this.executeRetrievals(understanding);
       
-      // Step 6: Generate response
+      // Step 5: Generate response
       const response = await this.generateResponse(
         userQuery, 
         understanding, 
@@ -53,7 +78,6 @@ export class LLMService {
         debug: enableDebug ? {
           extractedEntities,
           resolvedEntities,
-          confirmedEntities,
           understanding,
           retrievalResults,
           functionsUsed: retrievalResults.map(r => r.functionName)
@@ -69,6 +93,20 @@ export class LLMService {
   }
 
   /**
+   * Generate confirmation message for typos
+   */
+  generateTypoConfirmationMessage(possibleTypos) {
+    let message = "다음 용어가 올바르게 입력되었는지 확인해주세요:\n\n";
+    
+    possibleTypos.forEach((typo, index) => {
+      message += `${index + 1}. "${typo.original}" → "${typo.suggested}" (${typo.type})\n`;
+    });
+    
+    message += "\n맞다면 '확인'을, 원래 입력한 대로 진행하려면 '취소'를 눌러주세요.";
+    return message;
+  }
+
+  /**
    * Step 1: Extract entities from the user query
    */
   async extractEntities(userQuery) {
@@ -76,18 +114,29 @@ export class LLMService {
 Extract potential entities (assumptions, products, categories) from this query:
 "${userQuery}"
 
+Also check if any terms might be typos or similar to known terms:
+Known terms:
+- Assumptions: ${Object.values(this.entityMappings.assumptions).map(a => a.primaryName).join(', ')}
+- Products: ${Object.values(this.entityMappings.products).map(p => p.primaryName).join(', ')}
+
 Return a JSON object with:
 {
   "assumptions": ["extracted assumption terms"],
   "products": ["extracted product terms"],
   "categories": ["extracted category terms"],
   "years": ["extracted years"],
-  "otherTerms": ["other relevant terms"]
+  "otherTerms": ["other relevant terms"],
+  "possibleTypos": [
+    {
+      "original": "user's term",
+      "suggested": "correct term",
+      "type": "assumption/product/category",
+      "confidence": 0.0-1.0
+    }
+  ]
 }
 
-Extract actual terms from the query, not codes. For example:
-- If user says "할인률", extract "할인률"
-- If user says "갑상선암 보험", extract "갑상선암 보험"
+For example, if user says "할인유울", you might suggest "할인율" as a possible correction.
 `;
 
     const result = await this.model.generateContent(prompt);
@@ -169,233 +218,28 @@ Extract actual terms from the query, not codes. For example:
             code,
             matchedTerm: term,
             primaryName: entity.primaryName,
-            confidence: 0.9,
+            confidence: 1.0,
             matchType: 'alias'
           };
         }
       }
     }
     
-    // Fuzzy match - check if term is contained in names/aliases
-    for (const [code, entity] of Object.entries(entities)) {
-      const allNames = [entity.primaryName, ...(entity.aliases || [])];
-      for (const name of allNames) {
-        const nameLower = name.toLowerCase().replace(/\s+/g, '');
-        if (nameLower.includes(termLower) || termLower.includes(nameLower)) {
-          return {
-            code,
-            matchedTerm: term,
-            primaryName: entity.primaryName,
-            confidence: 0.7,
-            matchType: 'fuzzy'
-          };
-        }
-      }
-    }
-    
-    // If no match found, try to find similar terms using character similarity
-    const similarMatch = this.findSimilarTerm(term, entityType);
-    if (similarMatch) {
-      return similarMatch;
-    }
-    
+    // No fuzzy matching - only exact matches
     return null;
   }
 
-  /**
-   * Find similar terms using character-based similarity
-   */
-  findSimilarTerm(term, entityType) {
-    const entities = this.entityMappings[entityType];
-    let bestMatch = null;
-    let highestSimilarity = 0;
-    
-    for (const [code, entity] of Object.entries(entities)) {
-      const allNames = [entity.primaryName, ...(entity.aliases || [])];
-      
-      for (const name of allNames) {
-        const similarity = this.calculateSimilarity(term, name);
-        if (similarity > highestSimilarity && similarity > 0.6) {
-          highestSimilarity = similarity;
-          bestMatch = {
-            code,
-            matchedTerm: term,
-            primaryName: entity.primaryName,
-            suggestedTerm: name,
-            confidence: similarity * 0.5, // Lower confidence for similarity matches
-            matchType: 'similar',
-            similarity: similarity
-          };
-        }
-      }
-    }
-    
-    return bestMatch;
-  }
 
   /**
-   * Calculate similarity between two strings
+   * Step 3: Understand the query and extract parameters
    */
-  calculateSimilarity(str1, str2) {
-    const s1 = str1.toLowerCase();
-    const s2 = str2.toLowerCase();
-    
-    // Calculate Levenshtein distance
-    const matrix = [];
-    for (let i = 0; i <= s2.length; i++) {
-      matrix[i] = [i];
-    }
-    for (let j = 0; j <= s1.length; j++) {
-      matrix[0][j] = j;
-    }
-    
-    for (let i = 1; i <= s2.length; i++) {
-      for (let j = 1; j <= s1.length; j++) {
-        if (s2.charAt(i - 1) === s1.charAt(j - 1)) {
-          matrix[i][j] = matrix[i - 1][j - 1];
-        } else {
-          matrix[i][j] = Math.min(
-            matrix[i - 1][j - 1] + 1,
-            matrix[i][j - 1] + 1,
-            matrix[i - 1][j] + 1
-          );
-        }
-      }
-    }
-    
-    const distance = matrix[s2.length][s1.length];
-    const maxLength = Math.max(s1.length, s2.length);
-    return 1 - (distance / maxLength);
-  }
-
-  /**
-   * Step 3: Confirm entity matches with LLM
-   */
-  async confirmEntityMatches(userQuery, resolvedEntities) {
-    // Collect all matches that need confirmation
-    const matchesNeedingConfirmation = [];
-    
-    ['assumptions', 'products', 'categories'].forEach(type => {
-      resolvedEntities[type].forEach(match => {
-        if (match && (match.confidence < 0.9 || match.matchType === 'similar')) {
-          matchesNeedingConfirmation.push({
-            type,
-            ...match
-          });
-        }
-      });
-    });
-
-    if (matchesNeedingConfirmation.length === 0) {
-      return resolvedEntities;
-    }
-
-    const prompt = `
-사용자 질문: "${userQuery}"
-
-다음 매칭 결과를 확인해주세요:
-${matchesNeedingConfirmation.map(match => {
-  if (match.matchType === 'similar') {
-    return `
-- 사용자 입력: "${match.matchedTerm}"
-  제안: "${match.suggestedTerm}" (${match.primaryName})
-  유사도: ${(match.similarity * 100).toFixed(0)}%
-  타입: ${match.type}`;
-  } else {
-    return `
-- 사용자 입력: "${match.matchedTerm}"
-  매칭: "${match.primaryName}"
-  신뢰도: ${(match.confidence * 100).toFixed(0)}%
-  타입: ${match.type}`;
-  }
-}).join('\n')}
-
-각 매칭에 대해 다음과 같이 판단해주세요:
-1. 오타나 유사 용어로 보이는 경우 (예: "할인유울" → "할인율") - confirmed: true
-2. 문맥상 같은 의미로 사용된 경우 - confirmed: true  
-3. 완전히 다른 의미인 경우 - confirmed: false
-
-Return JSON:
-{
-  "confirmations": [
-    {
-      "matchedTerm": "입력된 용어",
-      "confirmed": true/false,
-      "reason": "확인/거부 이유",
-      "suggestedCorrection": "제안된 정정 (필요시)"
-    }
-  ]
-}`;
-
-    try {
-      const result = await this.model.generateContent(prompt);
-      const text = result.response.text();
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
-      
-      if (jsonMatch) {
-        const confirmationResult = JSON.parse(jsonMatch[0]);
-        const confirmations = confirmationResult.confirmations || [];
-        
-        // Apply confirmations to resolved entities
-        const updatedResolved = {
-          assumptions: [],
-          products: [],
-          categories: [],
-          years: resolvedEntities.years,
-          otherTerms: resolvedEntities.otherTerms
-        };
-        
-        // Process each type
-        ['assumptions', 'products', 'categories'].forEach(type => {
-          resolvedEntities[type].forEach(match => {
-            if (match && (match.confidence >= 0.9 && match.matchType !== 'similar')) {
-              // High confidence matches go through as-is
-              updatedResolved[type].push(match);
-            } else if (match) {
-              // Check confirmation
-              const confirmation = confirmations.find(c => 
-                c.matchedTerm === match.matchedTerm
-              );
-              
-              if (confirmation && confirmation.confirmed) {
-                // Update match with confirmation info
-                updatedResolved[type].push({
-                  ...match,
-                  confirmed: true,
-                  confirmationReason: confirmation.reason,
-                  correctedTerm: confirmation.suggestedCorrection || match.suggestedTerm
-                });
-              }
-            }
-          });
-        });
-        
-        return updatedResolved;
-      }
-    } catch (e) {
-      console.error('Confirmation error:', e);
-    }
-    
-    // If confirmation fails, return original with high-confidence matches only
-    return {
-      assumptions: resolvedEntities.assumptions.filter(m => m && m.confidence >= 0.7),
-      products: resolvedEntities.products.filter(m => m && m.confidence >= 0.7),
-      categories: resolvedEntities.categories.filter(m => m && m.confidence >= 0.7),
-      years: resolvedEntities.years,
-      otherTerms: resolvedEntities.otherTerms
-    };
-  }
-
-  /**
-   * Step 4: Understand the query and extract parameters
-   */
-  async understandQuery(userQuery, confirmedEntities) {
-    // Convert confirmed entities to codes
+  async understandQuery(userQuery, resolvedEntities) {
+    // Convert resolved entities to codes
     const entityCodes = {
-      assumptionCodes: confirmedEntities.assumptions.map(a => a.code),
-      productCodes: confirmedEntities.products.map(p => p.code),
-      categoryCodes: confirmedEntities.categories.map(c => c.code),
-      years: confirmedEntities.years
+      assumptionCodes: resolvedEntities.assumptions.map(a => a.code),
+      productCodes: resolvedEntities.products.map(p => p.code),
+      categoryCodes: resolvedEntities.categories.map(c => c.code),
+      years: resolvedEntities.years
     };
 
     const prompt = `
@@ -407,7 +251,7 @@ ${JSON.stringify(this.functionDescriptions, null, 2)}
 User Query: "${userQuery}"
 
 Resolved Entities:
-${JSON.stringify(confirmedEntities, null, 2)}
+${JSON.stringify(resolvedEntities, null, 2)}
 
 Entity Codes to Use:
 ${JSON.stringify(entityCodes, null, 2)}
@@ -446,7 +290,7 @@ Be precise with function selection and parameter extraction.`;
   }
 
   /**
-   * Step 5: Execute the required retrieval functions
+   * Step 4: Execute the required retrieval functions
    */
   async executeRetrievals(understanding) {
     const results = [];

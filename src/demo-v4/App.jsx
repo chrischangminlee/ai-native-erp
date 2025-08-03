@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { LLMService } from './llmService';
 import { getFunctionDescriptions, retrievalFunctions } from './retrievalFunctions';
 import explicitMemory from './data/explicitProductAssumptionMemory.json';
@@ -14,6 +14,8 @@ function App() {
   const [activeTab, setActiveTab] = useState('scenarios');
   const [selectedScenario, setSelectedScenario] = useState(null);
   const [expandedItems, setExpandedItems] = useState(new Set());
+  const [pendingTypos, setPendingTypos] = useState(null);
+  const isProcessingRef = useRef(false);
   const showDebug = true; // Always show debug info
 
   useEffect(() => {
@@ -42,15 +44,29 @@ function App() {
   };
 
   const handleQuerySubmit = async (e) => {
-    e.preventDefault();
-    if (!query || !llmService) return;
-
+    if (e && e.preventDefault) {
+      e.preventDefault();
+    }
+    
+    // Prevent duplicate submissions
+    if (!query || !llmService || loading || isProcessingRef.current) return;
+    
+    isProcessingRef.current = true;
     setLoading(true);
     setResponse(null);
 
     try {
-      const result = await llmService.processQuery(query, showDebug);
-      setResponse(result);
+      const result = await llmService.processQuery(query, showDebug, pendingTypos);
+      
+      if (result.needsConfirmation) {
+        // Store the pending typos and show confirmation dialog
+        setPendingTypos(result.possibleTypos);
+        setResponse(result);
+      } else {
+        // Normal response
+        setResponse(result);
+        setPendingTypos(null);
+      }
     } catch (error) {
       setResponse({
         success: false,
@@ -59,6 +75,7 @@ function App() {
       });
     } finally {
       setLoading(false);
+      isProcessingRef.current = false;
     }
   };
 
@@ -80,6 +97,24 @@ function App() {
       newExpanded.add(itemId);
     }
     setExpandedItems(newExpanded);
+  };
+
+  const handleTypoConfirmation = (confirmed) => {
+    if (confirmed && pendingTypos) {
+      // Mark all typos as confirmed
+      const confirmedTypos = pendingTypos.map(typo => ({
+        ...typo,
+        confirmed: true
+      }));
+      
+      // Resubmit with confirmed typos
+      setPendingTypos(confirmedTypos);
+      handleQuerySubmit();
+    } else {
+      // User rejected the suggestions, proceed with original terms
+      setPendingTypos([]);
+      handleQuerySubmit();
+    }
   };
 
   if (!llmService) {
@@ -145,6 +180,16 @@ function App() {
         <div className="border-b border-gray-200 mb-6">
           <nav className="-mb-px flex space-x-8">
             <button
+              onClick={() => setActiveTab('experiment')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'experiment'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              실험 내용
+            </button>
+            <button
               onClick={() => setActiveTab('scenarios')}
               className={`py-2 px-1 border-b-2 font-medium text-sm ${
                 activeTab === 'scenarios'
@@ -194,22 +239,16 @@ function App() {
             >
               엔티티 매핑
             </button>
-            <button
-              onClick={() => setActiveTab('experiment')}
-              className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'experiment'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              실험 내용
-            </button>
           </nav>
         </div>
 
         {/* Scenarios Tab */}
         {activeTab === 'scenarios' && (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div>
+            <p className="text-gray-700 mb-6 text-center text-lg">
+              아래 3개의 시나리오 중 하나를 선택하여 기업 데이터 정보 조회를 테스트해보세요
+            </p>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {scenarios.map((scenario) => (
               <div
                 key={scenario.id}
@@ -231,6 +270,7 @@ function App() {
                 </div>
               </div>
             ))}
+            </div>
           </div>
         )}
 
@@ -250,9 +290,9 @@ function App() {
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
+                      if (e.key === 'Enter' && !e.shiftKey && !loading) {
                         e.preventDefault();
-                        handleQuerySubmit(e);
+                        handleQuerySubmit();
                       }
                     }}
                     className="block w-full rounded-md border-gray-300 shadow-sm h-24"
@@ -274,16 +314,42 @@ function App() {
             {/* Response Display */}
             {response && (
               <div className="space-y-4">
-                {/* Main Response */}
-                <div className="bg-white p-6 rounded-lg shadow">
-                  <h3 className="font-bold text-lg mb-4">응답</h3>
-                  <div className="prose max-w-none">
-                    <pre className="whitespace-pre-wrap text-sm">{response.response}</pre>
+                {/* Typo Confirmation Dialog */}
+                {response.needsConfirmation && (
+                  <div className="bg-yellow-50 border border-yellow-200 p-6 rounded-lg shadow">
+                    <h3 className="font-bold text-lg mb-4 text-yellow-800">용어 확인 필요</h3>
+                    <div className="mb-4">
+                      <pre className="whitespace-pre-wrap text-sm">{response.response}</pre>
+                    </div>
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() => handleTypoConfirmation(true)}
+                        className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600"
+                      >
+                        확인 (제안된 용어로 진행)
+                      </button>
+                      <button
+                        onClick={() => handleTypoConfirmation(false)}
+                        className="bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600"
+                      >
+                        취소 (원래 입력대로 진행)
+                      </button>
+                    </div>
                   </div>
-                </div>
+                )}
+                
+                {/* Main Response */}
+                {!response.needsConfirmation && (
+                  <div className="bg-white p-6 rounded-lg shadow">
+                    <h3 className="font-bold text-lg mb-4">응답</h3>
+                    <div className="prose max-w-none">
+                      <pre className="whitespace-pre-wrap text-sm">{response.response}</pre>
+                    </div>
+                  </div>
+                )}
 
                 {/* Debug Information */}
-                {response.debug && (
+                {response.debug && !response.needsConfirmation && (
                   <div className="bg-gray-100 p-6 rounded-lg">
                     <h3 className="font-bold text-lg mb-4">디버그 정보</h3>
                     
@@ -303,72 +369,18 @@ function App() {
                           <pre className="bg-white p-3 rounded text-xs overflow-x-auto">
                             {JSON.stringify(response.debug.resolvedEntities, null, 2)}
                           </pre>
-                          {/* Show typo corrections if any */}
-                          {(() => {
-                            const similarMatches = [
-                              ...response.debug.resolvedEntities.assumptions,
-                              ...response.debug.resolvedEntities.products,
-                              ...response.debug.resolvedEntities.categories
-                            ].filter(m => m && m.matchType === 'similar');
-                            
-                            if (similarMatches.length > 0) {
-                              return (
-                                <div className="mt-2 p-2 bg-yellow-50 rounded text-sm">
-                                  <span className="font-medium text-yellow-800">오타 감지:</span>
-                                  {similarMatches.map((match, idx) => (
-                                    <div key={idx} className="mt-1">
-                                      "{match.matchedTerm}" → "{match.suggestedTerm}" 
-                                      (유사도: {(match.similarity * 100).toFixed(0)}%)
-                                    </div>
-                                  ))}
-                                </div>
-                              );
-                            }
-                            return null;
-                          })()}
-                        </div>
-                      )}
-                      
-                      {response.debug.confirmedEntities && (
-                        <div>
-                          <h4 className="font-medium mb-2">3. 확인된 엔티티:</h4>
-                          <pre className="bg-white p-3 rounded text-xs overflow-x-auto">
-                            {JSON.stringify(response.debug.confirmedEntities, null, 2)}
-                          </pre>
-                          {/* Show confirmation details if any */}
-                          {(() => {
-                            const confirmedMatches = [
-                              ...response.debug.confirmedEntities.assumptions,
-                              ...response.debug.confirmedEntities.products,
-                              ...response.debug.confirmedEntities.categories
-                            ].filter(m => m && m.confirmed && m.confirmationReason);
-                            
-                            if (confirmedMatches.length > 0) {
-                              return (
-                                <div className="mt-2 p-2 bg-green-50 rounded text-sm">
-                                  <span className="font-medium text-green-800">확인 결과:</span>
-                                  {confirmedMatches.map((match, idx) => (
-                                    <div key={idx} className="mt-1">
-                                      ✓ "{match.correctedTerm || match.matchedTerm}" - {match.confirmationReason}
-                                    </div>
-                                  ))}
-                                </div>
-                              );
-                            }
-                            return null;
-                          })()}
                         </div>
                       )}
                       
                       <div>
-                        <h4 className="font-medium mb-2">4. 쿼리 이해:</h4>
+                        <h4 className="font-medium mb-2">3. 쿼리 이해:</h4>
                         <pre className="bg-white p-3 rounded text-xs overflow-x-auto">
                           {JSON.stringify(response.debug.understanding, null, 2)}
                         </pre>
                       </div>
                       
                       <div>
-                        <h4 className="font-medium mb-2">5. 사용된 함수:</h4>
+                        <h4 className="font-medium mb-2">4. 사용된 함수:</h4>
                         <div className="flex flex-wrap gap-2">
                           {response.debug.functionsUsed.map((func, idx) => (
                             <span key={idx} className="bg-blue-100 text-blue-800 px-3 py-1 rounded text-sm">
@@ -379,7 +391,7 @@ function App() {
                       </div>
                       
                       <div>
-                        <h4 className="font-medium mb-2">6. 검색 결과:</h4>
+                        <h4 className="font-medium mb-2">5. 검색 결과:</h4>
                         <pre className="bg-white p-3 rounded text-xs overflow-x-auto">
                           {JSON.stringify(response.debug.retrievalResults, null, 2)}
                         </pre>
