@@ -121,7 +121,7 @@ function App() {
     return (
       <div className="min-h-screen bg-gray-50 p-8">
         <div className="max-w-2xl mx-auto">
-          <h1 className="text-3xl font-bold mb-8">명시적기억 DB와 사전계산통계 DB를 이용한 LLM + Retrieval Function 실험 플랫폼 </h1>
+          <h1 className="text-3xl font-bold mb-8">명시적기억 DB와 사전계산통계 DB를 이용한 LLM + Retrieval 실험 플랫폼 </h1>
           <form onSubmit={handleApiKeySubmit} className="bg-white p-6 rounded-lg shadow">
             <label className="block mb-4">
               <span className="text-gray-700">Gemini API Key:</span>
@@ -149,7 +149,7 @@ function App() {
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto p-4">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold">ㅊ</h1>
+          <h1 className="text-3xl font-bold">명시적기억 DB와 사전계산통계 DB를 이용한 LLM + Retrieval 실험 플랫폼</h1>
           <div className="flex gap-4">
             <a 
               href="https://chrischangminlee.github.io/Enterprise-AI-Platform/"
