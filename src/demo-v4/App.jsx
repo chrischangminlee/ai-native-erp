@@ -12,8 +12,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('scenarios');
   const [selectedScenario, setSelectedScenario] = useState(null);
-  const [selectedDataItem, setSelectedDataItem] = useState(null);
-  const [selectedFunction, setSelectedFunction] = useState(null);
+  const [expandedItems, setExpandedItems] = useState(new Set());
   const showDebug = true; // Always show debug info
 
   useEffect(() => {
@@ -71,10 +70,15 @@ function App() {
   const scenarios = llmService?.getScenarioExamples() || [];
   const functionDescriptions = getFunctionDescriptions();
   
-  // Get function implementation
-  const getFunctionImplementation = (funcName) => {
-    // Import retrievalFunctions to access the actual implementations
-    return retrievalFunctions[funcName];
+  // Toggle expanded state
+  const toggleExpanded = (itemId) => {
+    const newExpanded = new Set(expandedItems);
+    if (newExpanded.has(itemId)) {
+      newExpanded.delete(itemId);
+    } else {
+      newExpanded.add(itemId);
+    }
+    setExpandedItems(newExpanded);
   };
 
   if (!llmService) {
@@ -188,8 +192,13 @@ function App() {
           <div className="max-w-4xl mx-auto">
             <form onSubmit={handleQuerySubmit} className="mb-6">
               <div className="bg-white p-6 rounded-lg shadow">
-                <label className="block mb-4">
-                  <span className="text-gray-700 font-medium">질문 입력:</span>
+                <div className="mb-4">
+                  <div className="flex justify-between items-start mb-1">
+                    <span className="text-gray-700 font-medium">질문 입력:</span>
+                    <span className="text-sm text-gray-500">
+                      데이터 구조를 참고해서 유사한 질문을 해보세요
+                    </span>
+                  </div>
                   <textarea
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
@@ -199,13 +208,10 @@ function App() {
                         handleQuerySubmit(e);
                       }
                     }}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm h-24"
+                    className="block w-full rounded-md border-gray-300 shadow-sm h-24"
                     placeholder="예: 갑상선암 발생률이 변경되면 어떤 상품들이 영향을 받나요?"
                   />
-                  <p className="mt-2 text-sm text-gray-500">
-                    데이터 구조를 참고해서 유사한 질문을 해보세요
-                  </p>
-                </label>
+                </div>
                 <div className="flex items-center justify-end">
                   <button
                     type="submit"
@@ -274,55 +280,46 @@ function App() {
               <h2 className="text-xl font-bold mb-4">시스템 검색 함수</h2>
               <div className="space-y-4">
                 {functionDescriptions.map((func) => (
-                  <div 
-                    key={func.name} 
-                    className="border-l-4 border-blue-500 pl-4 cursor-pointer hover:bg-gray-50 py-2"
-                    onClick={() => setSelectedFunction(func.name)}
-                  >
-                    <h3 className="font-mono font-bold text-lg">{func.name}</h3>
-                    <p className="text-gray-600 mb-2">{func.description}</p>
-                    <div className="text-sm space-y-1">
-                      <p>
-                        <span className="font-medium">필수 키:</span>{' '}
-                        <code className="bg-gray-100 px-2 py-1 rounded">
-                          {func.requiredKeys.join(', ')}
-                        </code>
-                      </p>
-                      {func.optionalKeys.length > 0 && (
+                  <div key={func.name}>
+                    <div 
+                      className="border-l-4 border-blue-500 pl-4 cursor-pointer hover:bg-gray-50 py-2"
+                      onClick={() => toggleExpanded(`func-${func.name}`)}
+                    >
+                      <h3 className="font-mono font-bold text-lg">{func.name}</h3>
+                      <p className="text-gray-600 mb-2">{func.description}</p>
+                      <div className="text-sm space-y-1">
                         <p>
-                          <span className="font-medium">선택 키:</span>{' '}
+                          <span className="font-medium">필수 키:</span>{' '}
                           <code className="bg-gray-100 px-2 py-1 rounded">
-                            {func.optionalKeys.join(', ')}
+                            {func.requiredKeys.join(', ')}
                           </code>
                         </p>
-                      )}
-                      <p>
-                        <span className="font-medium">데이터 소스:</span>{' '}
-                        <span className="text-blue-600">{func.dataSource}</span>
-                      </p>
+                        {func.optionalKeys.length > 0 && (
+                          <p>
+                            <span className="font-medium">선택 키:</span>{' '}
+                            <code className="bg-gray-100 px-2 py-1 rounded">
+                              {func.optionalKeys.join(', ')}
+                            </code>
+                          </p>
+                        )}
+                        <p>
+                          <span className="font-medium">데이터 소스:</span>{' '}
+                          <span className="text-blue-600">{func.dataSource}</span>
+                        </p>
+                      </div>
                     </div>
+                    {expandedItems.has(`func-${func.name}`) && (
+                      <div className="ml-4 mt-2 p-4 bg-gray-50 rounded border-l-4 border-gray-300">
+                        <h4 className="font-mono font-bold text-sm mb-2">함수 구현:</h4>
+                        <pre className="bg-white p-3 rounded overflow-x-auto text-xs border">
+                          {retrievalFunctions[func.name]?.execute?.toString() || 'Function implementation not found'}
+                        </pre>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
             </div>
-
-            {/* Function Implementation View */}
-            {selectedFunction && (
-              <div className="mt-6 bg-white p-6 rounded-lg shadow">
-                <div className="flex justify-between items-start mb-4">
-                  <h3 className="text-lg font-bold font-mono">함수 구현: {selectedFunction}</h3>
-                  <button
-                    onClick={() => setSelectedFunction(null)}
-                    className="text-gray-500 hover:text-gray-700"
-                  >
-                    ✕
-                  </button>
-                </div>
-                <pre className="bg-gray-50 p-4 rounded overflow-x-auto text-xs">
-                  {getFunctionImplementation(selectedFunction)?.execute?.toString() || 'Function implementation not found'}
-                </pre>
-              </div>
-            )}
           </div>
         )}
 
@@ -337,17 +334,26 @@ function App() {
                     <h3 className="font-medium mb-2">가정(Assumption) 매핑:</h3>
                     <div className="text-sm space-y-1">
                       {Object.entries(explicitMemory.assumptionProductMappings).map(([code, data]) => (
-                        <div key={code} className="flex items-center">
-                          <code 
-                            className="bg-gray-100 px-2 py-1 rounded mr-2 cursor-pointer hover:bg-blue-100"
-                            onClick={() => setSelectedDataItem({ type: 'assumption', code, data })}
-                          >
-                            {code}
-                          </code>
-                          <span>{data.assumptionName}</span>
-                          <span className="text-gray-500 ml-2">
-                            ({data.affectedProducts.length} 상품)
-                          </span>
+                        <div key={code}>
+                          <div className="flex items-center">
+                            <code 
+                              className="bg-gray-100 px-2 py-1 rounded mr-2 cursor-pointer hover:bg-blue-100"
+                              onClick={() => toggleExpanded(`assumption-${code}`)}
+                            >
+                              {code}
+                            </code>
+                            <span>{data.assumptionName}</span>
+                            <span className="text-gray-500 ml-2">
+                              ({data.affectedProducts.length} 상품)
+                            </span>
+                          </div>
+                          {expandedItems.has(`assumption-${code}`) && (
+                            <div className="ml-4 mt-2 p-3 bg-gray-50 rounded text-xs">
+                              <pre className="overflow-x-auto">
+                                {JSON.stringify(data, null, 2)}
+                              </pre>
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -356,17 +362,26 @@ function App() {
                     <h3 className="font-medium mb-2">상품(Product) 프로필:</h3>
                     <div className="text-sm space-y-1">
                       {Object.entries(explicitMemory.productAssumptionProfiles).map(([code, data]) => (
-                        <div key={code} className="flex items-center">
-                          <code 
-                            className="bg-gray-100 px-2 py-1 rounded mr-2 cursor-pointer hover:bg-blue-100"
-                            onClick={() => setSelectedDataItem({ type: 'product-profile', code, data })}
-                          >
-                            {code}
-                          </code>
-                          <span>{data.productName}</span>
-                          <span className="text-gray-500 ml-2">
-                            ({data.assumptions.length} 가정)
-                          </span>
+                        <div key={code}>
+                          <div className="flex items-center">
+                            <code 
+                              className="bg-gray-100 px-2 py-1 rounded mr-2 cursor-pointer hover:bg-blue-100"
+                              onClick={() => toggleExpanded(`product-profile-${code}`)}
+                            >
+                              {code}
+                            </code>
+                            <span>{data.productName}</span>
+                            <span className="text-gray-500 ml-2">
+                              ({data.assumptions.length} 가정)
+                            </span>
+                          </div>
+                          {expandedItems.has(`product-profile-${code}`) && (
+                            <div className="ml-4 mt-2 p-3 bg-gray-50 rounded text-xs">
+                              <pre className="overflow-x-auto">
+                                {JSON.stringify(data, null, 2)}
+                              </pre>
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -381,17 +396,26 @@ function App() {
                     <h3 className="font-medium mb-2">상품별 연도 데이터:</h3>
                     <div className="text-sm space-y-1">
                       {Object.entries(precomputedStats.productYearlyMetrics).map(([code, data]) => (
-                        <div key={code} className="flex items-center">
-                          <code 
-                            className="bg-gray-100 px-2 py-1 rounded mr-2 cursor-pointer hover:bg-blue-100"
-                            onClick={() => setSelectedDataItem({ type: 'product-stats', code, data })}
-                          >
-                            {code}
-                          </code>
-                          <span>{data.productName}</span>
-                          <span className="text-gray-500 ml-2">
-                            ({Object.keys(data.yearlyData).join(', ')})
-                          </span>
+                        <div key={code}>
+                          <div className="flex items-center">
+                            <code 
+                              className="bg-gray-100 px-2 py-1 rounded mr-2 cursor-pointer hover:bg-blue-100"
+                              onClick={() => toggleExpanded(`product-stats-${code}`)}
+                            >
+                              {code}
+                            </code>
+                            <span>{data.productName}</span>
+                            <span className="text-gray-500 ml-2">
+                              ({Object.keys(data.yearlyData).join(', ')})
+                            </span>
+                          </div>
+                          {expandedItems.has(`product-stats-${code}`) && (
+                            <div className="ml-4 mt-2 p-3 bg-gray-50 rounded text-xs">
+                              <pre className="overflow-x-auto">
+                                {JSON.stringify(data, null, 2)}
+                              </pre>
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -402,32 +426,40 @@ function App() {
                       <div>
                         <span className="font-medium">연도별:</span>{' '}
                         {Object.keys(precomputedStats.aggregatedMetrics.byYear).map(year => (
-                          <span 
-                            key={year}
-                            className="inline-block bg-gray-100 px-2 py-1 rounded mr-1 cursor-pointer hover:bg-blue-100"
-                            onClick={() => setSelectedDataItem({ 
-                              type: 'aggregated-year', 
-                              code: year, 
-                              data: precomputedStats.aggregatedMetrics.byYear[year] 
-                            })}
-                          >
-                            {year}
+                          <span key={year}>
+                            <span 
+                              className="inline-block bg-gray-100 px-2 py-1 rounded mr-1 cursor-pointer hover:bg-blue-100"
+                              onClick={() => toggleExpanded(`aggregated-year-${year}`)}
+                            >
+                              {year}
+                            </span>
+                            {expandedItems.has(`aggregated-year-${year}`) && (
+                              <div className="mt-2 mb-2 p-3 bg-gray-50 rounded text-xs">
+                                <pre className="overflow-x-auto">
+                                  {JSON.stringify(precomputedStats.aggregatedMetrics.byYear[year], null, 2)}
+                                </pre>
+                              </div>
+                            )}
                           </span>
                         ))}
                       </div>
                       <div>
                         <span className="font-medium">카테고리별:</span>{' '}
                         {Object.keys(precomputedStats.aggregatedMetrics.byProductCategory).map(category => (
-                          <span 
-                            key={category}
-                            className="inline-block bg-gray-100 px-2 py-1 rounded mr-1 cursor-pointer hover:bg-blue-100"
-                            onClick={() => setSelectedDataItem({ 
-                              type: 'aggregated-category', 
-                              code: category, 
-                              data: precomputedStats.aggregatedMetrics.byProductCategory[category] 
-                            })}
-                          >
-                            {category}
+                          <span key={category}>
+                            <span 
+                              className="inline-block bg-gray-100 px-2 py-1 rounded mr-1 cursor-pointer hover:bg-blue-100"
+                              onClick={() => toggleExpanded(`aggregated-category-${category}`)}
+                            >
+                              {category}
+                            </span>
+                            {expandedItems.has(`aggregated-category-${category}`) && (
+                              <div className="mt-2 mb-2 p-3 bg-gray-50 rounded text-xs">
+                                <pre className="overflow-x-auto">
+                                  {JSON.stringify(precomputedStats.aggregatedMetrics.byProductCategory[category], null, 2)}
+                                </pre>
+                              </div>
+                            )}
                           </span>
                         ))}
                       </div>
@@ -436,30 +468,6 @@ function App() {
                 </div>
               </div>
             </div>
-
-            {/* Detail View */}
-            {selectedDataItem && (
-              <div className="mt-6 bg-white p-6 rounded-lg shadow">
-                <div className="flex justify-between items-start mb-4">
-                  <h3 className="text-lg font-bold">
-                    {selectedDataItem.type === 'assumption' && `가정: ${selectedDataItem.code}`}
-                    {selectedDataItem.type === 'product-profile' && `상품 프로필: ${selectedDataItem.code}`}
-                    {selectedDataItem.type === 'product-stats' && `상품 통계: ${selectedDataItem.code}`}
-                    {selectedDataItem.type === 'aggregated-year' && `${selectedDataItem.code}년 집계`}
-                    {selectedDataItem.type === 'aggregated-category' && `${selectedDataItem.code} 카테고리 집계`}
-                  </h3>
-                  <button
-                    onClick={() => setSelectedDataItem(null)}
-                    className="text-gray-500 hover:text-gray-700"
-                  >
-                    ✕
-                  </button>
-                </div>
-                <pre className="bg-gray-50 p-4 rounded overflow-x-auto text-xs">
-                  {JSON.stringify(selectedDataItem.data, null, 2)}
-                </pre>
-              </div>
-            )}
           </div>
         )}
       </div>
