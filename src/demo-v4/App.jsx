@@ -245,7 +245,7 @@ function App() {
         {/* Scenarios Tab */}
         {activeTab === 'scenarios' && (
           <div>
-            <p className="text-gray-700 mb-6 text-center text-lg">
+            <p className="text-gray-900 mb-6 text-center text-lg font-medium">
               아래 3개의 시나리오 중 하나를 선택하여 기업 데이터 정보 조회를 테스트해보세요
             </p>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
