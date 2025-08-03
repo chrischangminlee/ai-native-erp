@@ -1,0 +1,192 @@
+{
+  "metadata": {
+    "description": "Precomputed business metrics and statistics for products",
+    "lastUpdated": "2025-08-03",
+    "currency": "KRW"
+  },
+  
+  "productYearlyMetrics": {
+    "PROD-001": {
+      "productName": "갑상선암 건강보험 A",
+      "yearlyData": {
+        "2023": {
+          "premiumStatistics": {
+            "totalPremiumCollected": 12500000000,
+            "averageMonthlyPremium": 35000,
+            "contractCount": 3500,
+            "newContracts": 3500,
+            "terminatedContracts": 100
+          },
+          "claimStatistics": {
+            "totalClaimsPaid": 5625000000,
+            "claimCount": 81,
+            "averageClaimAmount": 69444444
+          },
+          "profitability": {
+            "lossRatio": 0.45,
+            "expenseRatio": 0.33,
+            "combinedRatio": 0.78,
+            "underwritingProfit": 2750000000
+          }
+        },
+        "2024": {
+          "premiumStatistics": {
+            "totalPremiumCollected": 15200000000,
+            "averageMonthlyPremium": 36000,
+            "contractCount": 4200,
+            "newContracts": 800,
+            "terminatedContracts": 100
+          },
+          "claimStatistics": {
+            "totalClaimsPaid": 7296000000,
+            "claimCount": 97,
+            "averageClaimAmount": 75216495
+          },
+          "profitability": {
+            "lossRatio": 0.48,
+            "expenseRatio": 0.32,
+            "combinedRatio": 0.80,
+            "underwritingProfit": 3040000000
+          }
+        }
+      }
+    },
+    
+    "PROD-002": {
+      "productName": "종합건강보험 B",
+      "yearlyData": {
+        "2023": {
+          "premiumStatistics": {
+            "totalPremiumCollected": 8500000000,
+            "averageMonthlyPremium": 45000,
+            "contractCount": 1700,
+            "newContracts": 1700,
+            "terminatedContracts": 50
+          },
+          "claimStatistics": {
+            "totalClaimsPaid": 4420000000,
+            "claimCount": 126,
+            "averageClaimAmount": 35079365
+          },
+          "profitability": {
+            "lossRatio": 0.52,
+            "expenseRatio": 0.35,
+            "combinedRatio": 0.87,
+            "underwritingProfit": 1105000000
+          }
+        },
+        "2024": {
+          "premiumStatistics": {
+            "totalPremiumCollected": 10800000000,
+            "averageMonthlyPremium": 47000,
+            "contractCount": 2100,
+            "newContracts": 450,
+            "terminatedContracts": 50
+          },
+          "claimStatistics": {
+            "totalClaimsPaid": 5832000000,
+            "claimCount": 147,
+            "averageClaimAmount": 39673469
+          },
+          "profitability": {
+            "lossRatio": 0.54,
+            "expenseRatio": 0.34,
+            "combinedRatio": 0.88,
+            "underwritingProfit": 1296000000
+          }
+        }
+      }
+    },
+    
+    "PROD-003": {
+      "productName": "종합건강보험 C",
+      "yearlyData": {
+        "2024": {
+          "premiumStatistics": {
+            "totalPremiumCollected": 7500000000,
+            "averageMonthlyPremium": 42000,
+            "contractCount": 1500,
+            "newContracts": 1500,
+            "terminatedContracts": 25
+          },
+          "claimStatistics": {
+            "totalClaimsPaid": 3750000000,
+            "claimCount": 98,
+            "averageClaimAmount": 38265306
+          },
+          "profitability": {
+            "lossRatio": 0.50,
+            "expenseRatio": 0.35,
+            "combinedRatio": 0.85,
+            "underwritingProfit": 1125000000
+          }
+        }
+      }
+    },
+    
+    "PROD-004": {
+      "productName": "갑상선암 건강보험 D",
+      "yearlyData": {
+        "2025": {
+          "premiumStatistics": {
+            "totalPremiumCollected": 1800000000,
+            "averageMonthlyPremium": 38000,
+            "contractCount": 600,
+            "newContracts": 600,
+            "terminatedContracts": 0
+          },
+          "claimStatistics": {
+            "totalClaimsPaid": 0,
+            "claimCount": 0,
+            "averageClaimAmount": 0
+          },
+          "profitability": {
+            "lossRatio": 0,
+            "expenseRatio": 0.40,
+            "combinedRatio": 0.40,
+            "underwritingProfit": 1080000000
+          }
+        }
+      }
+    }
+  },
+  
+  "aggregatedMetrics": {
+    "byYear": {
+      "2023": {
+        "totalPremiumCollected": 21000000000,
+        "totalClaimsPaid": 10045000000,
+        "averageLossRatio": 0.478,
+        "productCount": 2,
+        "totalContracts": 5200
+      },
+      "2024": {
+        "totalPremiumCollected": 33500000000,
+        "totalClaimsPaid": 16878000000,
+        "averageLossRatio": 0.504,
+        "productCount": 3,
+        "totalContracts": 7800
+      },
+      "2025": {
+        "totalPremiumCollected": 1800000000,
+        "totalClaimsPaid": 0,
+        "averageLossRatio": 0,
+        "productCount": 1,
+        "totalContracts": 600
+      }
+    },
+    
+    "byProductCategory": {
+      "thyroidCancer": {
+        "products": ["PROD-001", "PROD-004"],
+        "totalPremiumCollected2024": 15200000000,
+        "averageLossRatio2024": 0.48
+      },
+      "comprehensive": {
+        "products": ["PROD-002", "PROD-003"],
+        "totalPremiumCollected2024": 18300000000,
+        "averageLossRatio2024": 0.52
+      }
+    }
+  }
+}

@@ -1,4 +1,4 @@
-# LLM Retrieval System Design Document
+# LLM Retrieval System Design Document - Strict Separation Architecture
 
 ## Architecture Overview
 

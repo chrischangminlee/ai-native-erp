@@ -1,0 +1,154 @@
+{
+  "metadata": {
+    "description": "Product-Assumption relationships showing which products are affected by assumption changes",
+    "lastUpdated": "2025-08-03"
+  },
+  
+  "assumptionProductMappings": {
+    "C51": {
+      "assumptionName": "갑상선암 발생률",
+      "assumptionCategory": "INCIDENCE_RATE",
+      "affectedProducts": [
+        {
+          "productCode": "PROD-001",
+          "productName": "갑상선암 건강보험 A",
+          "lastAssumptionUpdate": "2025-07-01",
+          "updateType": "RATE_CHANGE",
+          "sensitivity": "HIGH"
+        },
+        {
+          "productCode": "PROD-004",
+          "productName": "갑상선암 건강보험 D",
+          "lastAssumptionUpdate": "2025-05-01",
+          "updateType": "INITIAL_SETUP",
+          "sensitivity": "HIGH"
+        }
+      ]
+    },
+    
+    "M01": {
+      "assumptionName": "사망률",
+      "assumptionCategory": "MORTALITY_RATE",
+      "affectedProducts": [
+        {
+          "productCode": "PROD-001",
+          "productName": "갑상선암 건강보험 A",
+          "lastAssumptionUpdate": "2025-06-15",
+          "updateType": "RATE_CHANGE",
+          "sensitivity": "MEDIUM"
+        },
+        {
+          "productCode": "PROD-002",
+          "productName": "종합건강보험 B",
+          "lastAssumptionUpdate": "2025-06-15",
+          "updateType": "RATE_CHANGE",
+          "sensitivity": "HIGH"
+        },
+        {
+          "productCode": "PROD-003",
+          "productName": "종합건강보험 C",
+          "lastAssumptionUpdate": "2025-06-15",
+          "updateType": "RATE_CHANGE",
+          "sensitivity": "HIGH"
+        }
+      ]
+    },
+    
+    "L01": {
+      "assumptionName": "해약률",
+      "assumptionCategory": "LAPSE_RATE",
+      "affectedProducts": [
+        {
+          "productCode": "PROD-001",
+          "productName": "갑상선암 건강보험 A",
+          "lastAssumptionUpdate": "2025-03-01",
+          "updateType": "RATE_CHANGE",
+          "sensitivity": "LOW"
+        },
+        {
+          "productCode": "PROD-002",
+          "productName": "종합건강보험 B",
+          "lastAssumptionUpdate": "2025-03-01",
+          "updateType": "RATE_CHANGE",
+          "sensitivity": "LOW"
+        },
+        {
+          "productCode": "PROD-003",
+          "productName": "종합건강보험 C",
+          "lastAssumptionUpdate": "2025-03-01",
+          "updateType": "RATE_CHANGE",
+          "sensitivity": "LOW"
+        },
+        {
+          "productCode": "PROD-004",
+          "productName": "갑상선암 건강보험 D",
+          "lastAssumptionUpdate": "2025-05-01",
+          "updateType": "INITIAL_SETUP",
+          "sensitivity": "LOW"
+        }
+      ]
+    },
+    
+    "D01": {
+      "assumptionName": "할인율",
+      "assumptionCategory": "DISCOUNT_RATE",
+      "affectedProducts": [
+        {
+          "productCode": "PROD-001",
+          "productName": "갑상선암 건강보험 A",
+          "lastAssumptionUpdate": "2025-01-01",
+          "updateType": "ANNUAL_REVIEW",
+          "sensitivity": "MEDIUM"
+        },
+        {
+          "productCode": "PROD-002",
+          "productName": "종합건강보험 B",
+          "lastAssumptionUpdate": "2025-01-01",
+          "updateType": "ANNUAL_REVIEW",
+          "sensitivity": "MEDIUM"
+        },
+        {
+          "productCode": "PROD-003",
+          "productName": "종합건강보험 C",
+          "lastAssumptionUpdate": "2025-01-01",
+          "updateType": "ANNUAL_REVIEW",
+          "sensitivity": "MEDIUM"
+        },
+        {
+          "productCode": "PROD-004",
+          "productName": "갑상선암 건강보험 D",
+          "lastAssumptionUpdate": "2025-05-01",
+          "updateType": "INITIAL_SETUP",
+          "sensitivity": "MEDIUM"
+        }
+      ]
+    }
+  },
+  
+  "productAssumptionProfiles": {
+    "PROD-001": {
+      "productName": "갑상선암 건강보험 A",
+      "launchDate": "2023-01-15",
+      "assumptions": ["C51", "M01", "L01", "D01"],
+      "lastReview": "2025-07-01"
+    },
+    "PROD-002": {
+      "productName": "종합건강보험 B",
+      "launchDate": "2023-06-01",
+      "assumptions": ["M01", "L01", "D01"],
+      "lastReview": "2025-06-15"
+    },
+    "PROD-003": {
+      "productName": "종합건강보험 C",
+      "launchDate": "2024-01-10",
+      "assumptions": ["M01", "L01", "D01"],
+      "lastReview": "2025-06-15"
+    },
+    "PROD-004": {
+      "productName": "갑상선암 건강보험 D",
+      "launchDate": "2025-05-01",
+      "assumptions": ["C51", "L01", "D01"],
+      "lastReview": "2025-05-01"
+    }
+  }
+}
