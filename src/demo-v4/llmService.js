@@ -193,59 +193,197 @@ Extract actual terms from the query, not codes. For example:
       }
     }
     
+    // If no match found, try to find similar terms using character similarity
+    const similarMatch = this.findSimilarTerm(term, entityType);
+    if (similarMatch) {
+      return similarMatch;
+    }
+    
     return null;
+  }
+
+  /**
+   * Find similar terms using character-based similarity
+   */
+  findSimilarTerm(term, entityType) {
+    const entities = this.entityMappings[entityType];
+    let bestMatch = null;
+    let highestSimilarity = 0;
+    
+    for (const [code, entity] of Object.entries(entities)) {
+      const allNames = [entity.primaryName, ...(entity.aliases || [])];
+      
+      for (const name of allNames) {
+        const similarity = this.calculateSimilarity(term, name);
+        if (similarity > highestSimilarity && similarity > 0.6) {
+          highestSimilarity = similarity;
+          bestMatch = {
+            code,
+            matchedTerm: term,
+            primaryName: entity.primaryName,
+            suggestedTerm: name,
+            confidence: similarity * 0.5, // Lower confidence for similarity matches
+            matchType: 'similar',
+            similarity: similarity
+          };
+        }
+      }
+    }
+    
+    return bestMatch;
+  }
+
+  /**
+   * Calculate similarity between two strings
+   */
+  calculateSimilarity(str1, str2) {
+    const s1 = str1.toLowerCase();
+    const s2 = str2.toLowerCase();
+    
+    // Calculate Levenshtein distance
+    const matrix = [];
+    for (let i = 0; i <= s2.length; i++) {
+      matrix[i] = [i];
+    }
+    for (let j = 0; j <= s1.length; j++) {
+      matrix[0][j] = j;
+    }
+    
+    for (let i = 1; i <= s2.length; i++) {
+      for (let j = 1; j <= s1.length; j++) {
+        if (s2.charAt(i - 1) === s1.charAt(j - 1)) {
+          matrix[i][j] = matrix[i - 1][j - 1];
+        } else {
+          matrix[i][j] = Math.min(
+            matrix[i - 1][j - 1] + 1,
+            matrix[i][j - 1] + 1,
+            matrix[i - 1][j] + 1
+          );
+        }
+      }
+    }
+    
+    const distance = matrix[s2.length][s1.length];
+    const maxLength = Math.max(s1.length, s2.length);
+    return 1 - (distance / maxLength);
   }
 
   /**
    * Step 3: Confirm entity matches with LLM
    */
   async confirmEntityMatches(userQuery, resolvedEntities) {
-    // Only confirm if there are fuzzy matches or low confidence matches
-    const needsConfirmation = [
-      ...resolvedEntities.assumptions,
-      ...resolvedEntities.products,
-      ...resolvedEntities.categories
-    ].some(match => match && match.confidence < 0.9);
+    // Collect all matches that need confirmation
+    const matchesNeedingConfirmation = [];
+    
+    ['assumptions', 'products', 'categories'].forEach(type => {
+      resolvedEntities[type].forEach(match => {
+        if (match && (match.confidence < 0.9 || match.matchType === 'similar')) {
+          matchesNeedingConfirmation.push({
+            type,
+            ...match
+          });
+        }
+      });
+    });
 
-    if (!needsConfirmation) {
+    if (matchesNeedingConfirmation.length === 0) {
       return resolvedEntities;
     }
 
     const prompt = `
-User asked: "${userQuery}"
+사용자 질문: "${userQuery}"
 
-I found these potential matches:
-${JSON.stringify(resolvedEntities, null, 2)}
+다음 매칭 결과를 확인해주세요:
+${matchesNeedingConfirmation.map(match => {
+  if (match.matchType === 'similar') {
+    return `
+- 사용자 입력: "${match.matchedTerm}"
+  제안: "${match.suggestedTerm}" (${match.primaryName})
+  유사도: ${(match.similarity * 100).toFixed(0)}%
+  타입: ${match.type}`;
+  } else {
+    return `
+- 사용자 입력: "${match.matchedTerm}"
+  매칭: "${match.primaryName}"
+  신뢰도: ${(match.confidence * 100).toFixed(0)}%
+  타입: ${match.type}`;
+  }
+}).join('\n')}
 
-Please confirm if these matches are correct based on the context of the query.
-Return the same structure but set confirmed: true/false for each match.
+각 매칭에 대해 다음과 같이 판단해주세요:
+1. 오타나 유사 용어로 보이는 경우 (예: "할인유울" → "할인율") - confirmed: true
+2. 문맥상 같은 의미로 사용된 경우 - confirmed: true  
+3. 완전히 다른 의미인 경우 - confirmed: false
 
-For example, if user said "할인률" and we matched it to "할인율", that's correct (confirmed: true).
-But if the match seems wrong based on context, set confirmed: false.
-`;
+Return JSON:
+{
+  "confirmations": [
+    {
+      "matchedTerm": "입력된 용어",
+      "confirmed": true/false,
+      "reason": "확인/거부 이유",
+      "suggestedCorrection": "제안된 정정 (필요시)"
+    }
+  ]
+}`;
 
-    const result = await this.model.generateContent(prompt);
-    const text = result.response.text();
-    
-    // For now, if confirmation fails, just return original resolved entities
     try {
+      const result = await this.model.generateContent(prompt);
+      const text = result.response.text();
       const jsonMatch = text.match(/\{[\s\S]*\}/);
+      
       if (jsonMatch) {
-        const confirmed = JSON.parse(jsonMatch[0]);
-        // Filter out non-confirmed matches
-        return {
-          assumptions: (confirmed.assumptions || []).filter(m => m.confirmed !== false),
-          products: (confirmed.products || []).filter(m => m.confirmed !== false),
-          categories: (confirmed.categories || []).filter(m => m.confirmed !== false),
+        const confirmationResult = JSON.parse(jsonMatch[0]);
+        const confirmations = confirmationResult.confirmations || [];
+        
+        // Apply confirmations to resolved entities
+        const updatedResolved = {
+          assumptions: [],
+          products: [],
+          categories: [],
           years: resolvedEntities.years,
           otherTerms: resolvedEntities.otherTerms
         };
+        
+        // Process each type
+        ['assumptions', 'products', 'categories'].forEach(type => {
+          resolvedEntities[type].forEach(match => {
+            if (match && (match.confidence >= 0.9 && match.matchType !== 'similar')) {
+              // High confidence matches go through as-is
+              updatedResolved[type].push(match);
+            } else if (match) {
+              // Check confirmation
+              const confirmation = confirmations.find(c => 
+                c.matchedTerm === match.matchedTerm
+              );
+              
+              if (confirmation && confirmation.confirmed) {
+                // Update match with confirmation info
+                updatedResolved[type].push({
+                  ...match,
+                  confirmed: true,
+                  confirmationReason: confirmation.reason,
+                  correctedTerm: confirmation.suggestedCorrection || match.suggestedTerm
+                });
+              }
+            }
+          });
+        });
+        
+        return updatedResolved;
       }
     } catch (e) {
-      // If parsing fails, return original
+      console.error('Confirmation error:', e);
     }
     
-    return resolvedEntities;
+    // If confirmation fails, return original with high-confidence matches only
+    return {
+      assumptions: resolvedEntities.assumptions.filter(m => m && m.confidence >= 0.7),
+      products: resolvedEntities.products.filter(m => m && m.confidence >= 0.7),
+      categories: resolvedEntities.categories.filter(m => m && m.confidence >= 0.7),
+      years: resolvedEntities.years,
+      otherTerms: resolvedEntities.otherTerms
+    };
   }
 
   /**

@@ -113,7 +113,33 @@ function App() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto p-4">
-        <h1 className="text-3xl font-bold mb-6">LLM Retrieval 실험 플랫폼 V4</h1>
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold">LLM Retrieval 실험 플랫폼 V4</h1>
+          <div className="flex gap-4">
+            <a 
+              href="https://chrischangminlee.github.io/Enterprise-AI-Platform/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center text-gray-600 hover:text-gray-900 text-sm"
+            >
+              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+              </svg>
+              기업 AI 정보 플랫폼
+            </a>
+            <a 
+              href="https://www.linkedin.com/in/chrislee9407/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center text-gray-600 hover:text-gray-900 text-sm"
+            >
+              <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
+              </svg>
+              개발자 링크드인
+            </a>
+          </div>
+        </div>
         
         {/* Tabs */}
         <div className="border-b border-gray-200 mb-6">
@@ -277,6 +303,29 @@ function App() {
                           <pre className="bg-white p-3 rounded text-xs overflow-x-auto">
                             {JSON.stringify(response.debug.resolvedEntities, null, 2)}
                           </pre>
+                          {/* Show typo corrections if any */}
+                          {(() => {
+                            const similarMatches = [
+                              ...response.debug.resolvedEntities.assumptions,
+                              ...response.debug.resolvedEntities.products,
+                              ...response.debug.resolvedEntities.categories
+                            ].filter(m => m && m.matchType === 'similar');
+                            
+                            if (similarMatches.length > 0) {
+                              return (
+                                <div className="mt-2 p-2 bg-yellow-50 rounded text-sm">
+                                  <span className="font-medium text-yellow-800">오타 감지:</span>
+                                  {similarMatches.map((match, idx) => (
+                                    <div key={idx} className="mt-1">
+                                      "{match.matchedTerm}" → "{match.suggestedTerm}" 
+                                      (유사도: {(match.similarity * 100).toFixed(0)}%)
+                                    </div>
+                                  ))}
+                                </div>
+                              );
+                            }
+                            return null;
+                          })()}
                         </div>
                       )}
                       
@@ -286,6 +335,28 @@ function App() {
                           <pre className="bg-white p-3 rounded text-xs overflow-x-auto">
                             {JSON.stringify(response.debug.confirmedEntities, null, 2)}
                           </pre>
+                          {/* Show confirmation details if any */}
+                          {(() => {
+                            const confirmedMatches = [
+                              ...response.debug.confirmedEntities.assumptions,
+                              ...response.debug.confirmedEntities.products,
+                              ...response.debug.confirmedEntities.categories
+                            ].filter(m => m && m.confirmed && m.confirmationReason);
+                            
+                            if (confirmedMatches.length > 0) {
+                              return (
+                                <div className="mt-2 p-2 bg-green-50 rounded text-sm">
+                                  <span className="font-medium text-green-800">확인 결과:</span>
+                                  {confirmedMatches.map((match, idx) => (
+                                    <div key={idx} className="mt-1">
+                                      ✓ "{match.correctedTerm || match.matchedTerm}" - {match.confirmationReason}
+                                    </div>
+                                  ))}
+                                </div>
+                              );
+                            }
+                            return null;
+                          })()}
                         </div>
                       )}
                       
@@ -674,9 +745,22 @@ function App() {
         {activeTab === 'experiment' && (
           <div className="max-w-4xl mx-auto">
             <div className="bg-white p-8 rounded-lg shadow">
-              <h1 className="text-2xl font-bold mb-6">
-                명시적 기억과 사전계산 통계를 이용한 보험 기업 AI 활용 방안 Test
-              </h1>
+              <div className="flex justify-between items-start mb-6">
+                <h1 className="text-2xl font-bold">
+                  명시적 기억과 사전계산 통계를 이용한 보험 기업 AI 활용 방안 Test
+                </h1>
+                <a 
+                  href="https://changminiai.tistory.com/entry/%EA%B8%B0%EC%97%85-AI-%EB%8F%84%EC%9E%85-%EA%B0%80%EC%9D%B4%EB%93%9C-Enterprise-AI-AI-Agent%EB%A5%BC-%EC%9C%84%ED%95%9C-ERP-%EA%B5%AC%EC%A1%B0-%EB%AA%85%EC%8B%9C%EC%A0%81-%EA%B8%B0%EC%96%B5-Explicit-Memory%EA%B3%BC-%EC%82%AC%EC%A0%84-%EA%B3%84%EC%82%B0-%ED%86%B5%EA%B3%84Precomputed-Statistics-%EB%B3%B4%ED%97%98-%EC%83%81%ED%92%88%EA%B0%9C%EB%B0%9C-%EB%B3%B4%ED%97%98-%EA%B3%84%EB%A6%AC-AI-ERP-%EC%98%88%EC%8B%9C"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center text-blue-600 hover:text-blue-800 text-sm font-medium"
+                >
+                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                  관련블로그
+                </a>
+              </div>
 
               <section className="mb-8">
                 <h2 className="text-xl font-semibold mb-3 text-blue-600">테스트 목적:</h2>
@@ -705,7 +789,7 @@ function App() {
                         <li>사용자 의도 파악</li>
                         <li>명시적 기억 또는 사전계산 통계 중 적절한 데이터 소스 결정</li>
                         <li>필요한 Retrieval Function 선택</li>
-                        <li>파라미터 추출 (한국어 → 시스템 코드 변환)</li>
+                        <li>필요 Retrieval Function이 요구하는 파라미터 추출 (한국어(갑상선암) → 시스템 코드 (C51) 변환)</li>
                       </ul>
                     </div>
                   </li>
@@ -734,8 +818,8 @@ function App() {
                   <div className="bg-blue-50 p-4 rounded-lg">
                     <h3 className="font-semibold text-blue-800 mb-2">명시적 기억 (Explicit Memory):</h3>
                     <p className="text-gray-700">
-                      보험 상품과 계리 가정 간의 복잡한 관계를 그래프 형태로 명시적으로 저장하여, 
-                      가정 변경이 상품에 미치는 영향을 실시간으로 파악
+                      보험 상품과 계리 가정 간의 복잡한 관계를 명시적으로 저장하여, 
+                      가정과 상품의 관계 정보를 즉시 조회
                     </p>
                   </div>
                   <div className="bg-green-50 p-4 rounded-lg">
