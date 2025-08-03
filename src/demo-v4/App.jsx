@@ -121,7 +121,7 @@ function App() {
     return (
       <div className="min-h-screen bg-gray-50 p-8">
         <div className="max-w-2xl mx-auto">
-          <h1 className="text-3xl font-bold mb-8">LLM Retrieval 실험 플랫폼 V4</h1>
+          <h1 className="text-3xl font-bold mb-8">명시적기억 DB와 사전계산통계 DB를 이용한 LLM Retrieval 실험 플랫폼 </h1>
           <form onSubmit={handleApiKeySubmit} className="bg-white p-6 rounded-lg shadow">
             <label className="block mb-4">
               <span className="text-gray-700">Gemini API Key:</span>
@@ -759,7 +759,7 @@ function App() {
             <div className="bg-white p-8 rounded-lg shadow">
               <div className="flex justify-between items-start mb-6">
                 <h1 className="text-2xl font-bold">
-                  명시적 기억과 사전계산 통계를 이용한 보험 기업 AI 활용 방안 Test
+                  명시적 기억과 사전계산 통계를 이용한 보험 기업 생성형 AI 활용 방안 Test
                 </h1>
                 <a 
                   href="https://changminiai.tistory.com/entry/%EA%B8%B0%EC%97%85-AI-%EB%8F%84%EC%9E%85-%EA%B0%80%EC%9D%B4%EB%93%9C-Enterprise-AI-AI-Agent%EB%A5%BC-%EC%9C%84%ED%95%9C-ERP-%EA%B5%AC%EC%A1%B0-%EB%AA%85%EC%8B%9C%EC%A0%81-%EA%B8%B0%EC%96%B5-Explicit-Memory%EA%B3%BC-%EC%82%AC%EC%A0%84-%EA%B3%84%EC%82%B0-%ED%86%B5%EA%B3%84Precomputed-Statistics-%EB%B3%B4%ED%97%98-%EC%83%81%ED%92%88%EA%B0%9C%EB%B0%9C-%EB%B3%B4%ED%97%98-%EA%B3%84%EB%A6%AC-AI-ERP-%EC%98%88%EC%8B%9C"
