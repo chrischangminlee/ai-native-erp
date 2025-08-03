@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { LLMService } from './llmService';
-import { getFunctionDescriptions } from './retrievalFunctions';
+import { getFunctionDescriptions, retrievalFunctions } from './retrievalFunctions';
 import explicitMemory from './data/explicitProductAssumptionMemory.json';
 import precomputedStats from './data/precomputedStatistics.json';
 
@@ -12,7 +12,9 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('scenarios');
   const [selectedScenario, setSelectedScenario] = useState(null);
-  const [showDebug, setShowDebug] = useState(true);
+  const [selectedDataItem, setSelectedDataItem] = useState(null);
+  const [selectedFunction, setSelectedFunction] = useState(null);
+  const showDebug = true; // Always show debug info
 
   useEffect(() => {
     // Check for API key in environment variable first (from Vercel)
@@ -68,6 +70,12 @@ function App() {
 
   const scenarios = llmService?.getScenarioExamples() || [];
   const functionDescriptions = getFunctionDescriptions();
+  
+  // Get function implementation
+  const getFunctionImplementation = (funcName) => {
+    // Import retrievalFunctions to access the actual implementations
+    return retrievalFunctions[funcName];
+  };
 
   if (!llmService) {
     return (
@@ -185,20 +193,20 @@ function App() {
                   <textarea
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleQuerySubmit(e);
+                      }
+                    }}
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm h-24"
                     placeholder="예: 갑상선암 발생률이 변경되면 어떤 상품들이 영향을 받나요?"
                   />
+                  <p className="mt-2 text-sm text-gray-500">
+                    데이터 구조를 참고해서 유사한 질문을 해보세요
+                  </p>
                 </label>
-                <div className="flex items-center justify-between">
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={showDebug}
-                      onChange={(e) => setShowDebug(e.target.checked)}
-                      className="mr-2"
-                    />
-                    <span className="text-sm text-gray-600">디버그 정보 표시</span>
-                  </label>
+                <div className="flex items-center justify-end">
                   <button
                     type="submit"
                     disabled={loading || !query}
@@ -222,7 +230,7 @@ function App() {
                 </div>
 
                 {/* Debug Information */}
-                {response.debug && showDebug && (
+                {response.debug && (
                   <div className="bg-gray-100 p-6 rounded-lg">
                     <h3 className="font-bold text-lg mb-4">디버그 정보</h3>
                     
@@ -266,7 +274,11 @@ function App() {
               <h2 className="text-xl font-bold mb-4">시스템 검색 함수</h2>
               <div className="space-y-4">
                 {functionDescriptions.map((func) => (
-                  <div key={func.name} className="border-l-4 border-blue-500 pl-4">
+                  <div 
+                    key={func.name} 
+                    className="border-l-4 border-blue-500 pl-4 cursor-pointer hover:bg-gray-50 py-2"
+                    onClick={() => setSelectedFunction(func.name)}
+                  >
                     <h3 className="font-mono font-bold text-lg">{func.name}</h3>
                     <p className="text-gray-600 mb-2">{func.description}</p>
                     <div className="text-sm space-y-1">
@@ -293,78 +305,161 @@ function App() {
                 ))}
               </div>
             </div>
+
+            {/* Function Implementation View */}
+            {selectedFunction && (
+              <div className="mt-6 bg-white p-6 rounded-lg shadow">
+                <div className="flex justify-between items-start mb-4">
+                  <h3 className="text-lg font-bold font-mono">함수 구현: {selectedFunction}</h3>
+                  <button
+                    onClick={() => setSelectedFunction(null)}
+                    className="text-gray-500 hover:text-gray-700"
+                  >
+                    ✕
+                  </button>
+                </div>
+                <pre className="bg-gray-50 p-4 rounded overflow-x-auto text-xs">
+                  {getFunctionImplementation(selectedFunction)?.execute?.toString() || 'Function implementation not found'}
+                </pre>
+              </div>
+            )}
           </div>
         )}
 
         {/* Data Tab */}
         {activeTab === 'data' && (
-          <div className="max-w-6xl mx-auto grid gap-6 lg:grid-cols-2">
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h2 className="text-xl font-bold mb-4">Explicit Memory Structure</h2>
-              <div className="space-y-4">
-                <div>
-                  <h3 className="font-medium mb-2">가정(Assumption) 매핑:</h3>
-                  <div className="text-sm space-y-1">
-                    {Object.entries(explicitMemory.assumptionProductMappings).map(([code, data]) => (
-                      <div key={code} className="flex items-center">
-                        <code className="bg-gray-100 px-2 py-1 rounded mr-2">{code}</code>
-                        <span>{data.assumptionName}</span>
-                        <span className="text-gray-500 ml-2">
-                          ({data.affectedProducts.length} 상품)
-                        </span>
-                      </div>
-                    ))}
+          <div className="max-w-6xl mx-auto">
+            <div className="grid gap-6 lg:grid-cols-2">
+              <div className="bg-white p-6 rounded-lg shadow">
+                <h2 className="text-xl font-bold mb-4">Explicit Memory Structure</h2>
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="font-medium mb-2">가정(Assumption) 매핑:</h3>
+                    <div className="text-sm space-y-1">
+                      {Object.entries(explicitMemory.assumptionProductMappings).map(([code, data]) => (
+                        <div key={code} className="flex items-center">
+                          <code 
+                            className="bg-gray-100 px-2 py-1 rounded mr-2 cursor-pointer hover:bg-blue-100"
+                            onClick={() => setSelectedDataItem({ type: 'assumption', code, data })}
+                          >
+                            {code}
+                          </code>
+                          <span>{data.assumptionName}</span>
+                          <span className="text-gray-500 ml-2">
+                            ({data.affectedProducts.length} 상품)
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="font-medium mb-2">상품(Product) 프로필:</h3>
+                    <div className="text-sm space-y-1">
+                      {Object.entries(explicitMemory.productAssumptionProfiles).map(([code, data]) => (
+                        <div key={code} className="flex items-center">
+                          <code 
+                            className="bg-gray-100 px-2 py-1 rounded mr-2 cursor-pointer hover:bg-blue-100"
+                            onClick={() => setSelectedDataItem({ type: 'product-profile', code, data })}
+                          >
+                            {code}
+                          </code>
+                          <span>{data.productName}</span>
+                          <span className="text-gray-500 ml-2">
+                            ({data.assumptions.length} 가정)
+                          </span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
-                <div>
-                  <h3 className="font-medium mb-2">상품(Product) 프로필:</h3>
-                  <div className="text-sm space-y-1">
-                    {Object.entries(explicitMemory.productAssumptionProfiles).map(([code, data]) => (
-                      <div key={code} className="flex items-center">
-                        <code className="bg-gray-100 px-2 py-1 rounded mr-2">{code}</code>
-                        <span>{data.productName}</span>
-                        <span className="text-gray-500 ml-2">
-                          ({data.assumptions.length} 가정)
-                        </span>
+              </div>
+
+              <div className="bg-white p-6 rounded-lg shadow">
+                <h2 className="text-xl font-bold mb-4">Precomputed Statistics Structure</h2>
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="font-medium mb-2">상품별 연도 데이터:</h3>
+                    <div className="text-sm space-y-1">
+                      {Object.entries(precomputedStats.productYearlyMetrics).map(([code, data]) => (
+                        <div key={code} className="flex items-center">
+                          <code 
+                            className="bg-gray-100 px-2 py-1 rounded mr-2 cursor-pointer hover:bg-blue-100"
+                            onClick={() => setSelectedDataItem({ type: 'product-stats', code, data })}
+                          >
+                            {code}
+                          </code>
+                          <span>{data.productName}</span>
+                          <span className="text-gray-500 ml-2">
+                            ({Object.keys(data.yearlyData).join(', ')})
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="font-medium mb-2">집계 데이터:</h3>
+                    <div className="text-sm space-y-2">
+                      <div>
+                        <span className="font-medium">연도별:</span>{' '}
+                        {Object.keys(precomputedStats.aggregatedMetrics.byYear).map(year => (
+                          <span 
+                            key={year}
+                            className="inline-block bg-gray-100 px-2 py-1 rounded mr-1 cursor-pointer hover:bg-blue-100"
+                            onClick={() => setSelectedDataItem({ 
+                              type: 'aggregated-year', 
+                              code: year, 
+                              data: precomputedStats.aggregatedMetrics.byYear[year] 
+                            })}
+                          >
+                            {year}
+                          </span>
+                        ))}
                       </div>
-                    ))}
+                      <div>
+                        <span className="font-medium">카테고리별:</span>{' '}
+                        {Object.keys(precomputedStats.aggregatedMetrics.byProductCategory).map(category => (
+                          <span 
+                            key={category}
+                            className="inline-block bg-gray-100 px-2 py-1 rounded mr-1 cursor-pointer hover:bg-blue-100"
+                            onClick={() => setSelectedDataItem({ 
+                              type: 'aggregated-category', 
+                              code: category, 
+                              data: precomputedStats.aggregatedMetrics.byProductCategory[category] 
+                            })}
+                          >
+                            {category}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h2 className="text-xl font-bold mb-4">Precomputed Statistics Structure</h2>
-              <div className="space-y-4">
-                <div>
-                  <h3 className="font-medium mb-2">상품별 연도 데이터:</h3>
-                  <div className="text-sm space-y-1">
-                    {Object.entries(precomputedStats.productYearlyMetrics).map(([code, data]) => (
-                      <div key={code} className="flex items-center">
-                        <code className="bg-gray-100 px-2 py-1 rounded mr-2">{code}</code>
-                        <span>{data.productName}</span>
-                        <span className="text-gray-500 ml-2">
-                          ({Object.keys(data.yearlyData).join(', ')})
-                        </span>
-                      </div>
-                    ))}
-                  </div>
+            {/* Detail View */}
+            {selectedDataItem && (
+              <div className="mt-6 bg-white p-6 rounded-lg shadow">
+                <div className="flex justify-between items-start mb-4">
+                  <h3 className="text-lg font-bold">
+                    {selectedDataItem.type === 'assumption' && `가정: ${selectedDataItem.code}`}
+                    {selectedDataItem.type === 'product-profile' && `상품 프로필: ${selectedDataItem.code}`}
+                    {selectedDataItem.type === 'product-stats' && `상품 통계: ${selectedDataItem.code}`}
+                    {selectedDataItem.type === 'aggregated-year' && `${selectedDataItem.code}년 집계`}
+                    {selectedDataItem.type === 'aggregated-category' && `${selectedDataItem.code} 카테고리 집계`}
+                  </h3>
+                  <button
+                    onClick={() => setSelectedDataItem(null)}
+                    className="text-gray-500 hover:text-gray-700"
+                  >
+                    ✕
+                  </button>
                 </div>
-                <div>
-                  <h3 className="font-medium mb-2">집계 데이터:</h3>
-                  <div className="text-sm space-y-2">
-                    <div>
-                      <span className="font-medium">연도별:</span>{' '}
-                      {Object.keys(precomputedStats.aggregatedMetrics.byYear).join(', ')}
-                    </div>
-                    <div>
-                      <span className="font-medium">카테고리별:</span>{' '}
-                      {Object.keys(precomputedStats.aggregatedMetrics.byProductCategory).join(', ')}
-                    </div>
-                  </div>
-                </div>
+                <pre className="bg-gray-50 p-4 rounded overflow-x-auto text-xs">
+                  {JSON.stringify(selectedDataItem.data, null, 2)}
+                </pre>
               </div>
-            </div>
+            )}
           </div>
         )}
       </div>

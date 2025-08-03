@@ -18,7 +18,7 @@ export const retrievalFunctions = {
    */
   getProductsByAssumption: {
     name: 'getProductsByAssumption',
-    description: 'Returns list of products affected by a specific assumption',
+    description: '특정 가정(assumption)에 영향받는 상품 목록을 반환합니다',
     requiredKeys: ['assumptionCode'],
     dataSource: 'explicitMemory',
     execute: ({ assumptionCode }) => {
@@ -51,7 +51,7 @@ export const retrievalFunctions = {
    */
   getAssumptionsByProduct: {
     name: 'getAssumptionsByProduct',
-    description: 'Returns list of assumptions used by a specific product',
+    description: '특정 상품이 사용하는 가정(assumption) 목록을 반환합니다',
     requiredKeys: ['productCode'],
     dataSource: 'explicitMemory',
     execute: ({ productCode }) => {
@@ -95,7 +95,7 @@ export const retrievalFunctions = {
    */
   getProductProfitability: {
     name: 'getProductProfitability',
-    description: 'Returns profitability metrics (premium and claims) for products',
+    description: '상품의 수익성 지표(보험료 및 보험금)를 반환합니다',
     requiredKeys: ['year'],
     optionalKeys: ['productCode'],
     dataSource: 'precomputedStats',
@@ -168,7 +168,7 @@ export const retrievalFunctions = {
    */
   getPremiumStatisticsByProduct: {
     name: 'getPremiumStatisticsByProduct',
-    description: 'Returns yearly premium statistics for a specific product',
+    description: '특정 상품의 연도별 보험료 통계를 반환합니다',
     requiredKeys: ['productCode'],
     dataSource: 'precomputedStats',
     execute: ({ productCode }) => {
@@ -212,7 +212,7 @@ export const retrievalFunctions = {
    */
   getAggregatedMetrics: {
     name: 'getAggregatedMetrics',
-    description: 'Returns aggregated metrics by year or product category',
+    description: '연도별 또는 상품 카테고리별 집계 지표를 반환합니다',
     requiredKeys: ['aggregationType', 'value'],
     dataSource: 'precomputedStats',
     execute: ({ aggregationType, value }) => {
