@@ -148,40 +148,42 @@ function App() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto p-4">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold">명시적기억 DB와 사전계산통계 DB를 이용한 LLM + Retrieval 실험 플랫폼</h1>
-          <div className="flex gap-4">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-4">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">명시적기억 DB와 사전계산통계 DB를 이용한 LLM + Retrieval 실험 플랫폼</h1>
+          <div className="flex gap-2 sm:gap-4 flex-shrink-0">
             <a 
               href="https://chrischangminlee.github.io/Enterprise-AI-Platform/"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center text-gray-600 hover:text-gray-900 text-sm"
+              className="flex items-center text-gray-600 hover:text-gray-900 text-xs sm:text-sm whitespace-nowrap"
             >
-              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
               </svg>
-              기업 AI 정보 플랫폼
+              <span className="hidden sm:inline">기업 AI 정보 플랫폼</span>
+              <span className="sm:hidden">AI 플랫폼</span>
             </a>
             <a 
               href="https://www.linkedin.com/in/chrislee9407/"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center text-gray-600 hover:text-gray-900 text-sm"
+              className="flex items-center text-gray-600 hover:text-gray-900 text-xs sm:text-sm whitespace-nowrap"
             >
-              <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 mr-1 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
               </svg>
-              개발자 링크드인
+              <span className="hidden sm:inline">개발자 링크드인</span>
+              <span className="sm:hidden">LinkedIn</span>
             </a>
           </div>
         </div>
         
         {/* Tabs */}
-        <div className="border-b border-gray-200 mb-6">
-          <nav className="-mb-px flex space-x-8">
+        <div className="border-b border-gray-200 mb-6 overflow-x-auto">
+          <nav className="-mb-px flex space-x-2 sm:space-x-4 lg:space-x-8 min-w-max">
             <button
               onClick={() => setActiveTab('experiment')}
-              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              className={`py-2 px-2 sm:px-3 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap ${
                 activeTab === 'experiment'
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -191,7 +193,7 @@ function App() {
             </button>
             <button
               onClick={() => setActiveTab('scenarios')}
-              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              className={`py-2 px-2 sm:px-3 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap ${
                 activeTab === 'scenarios'
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -201,7 +203,7 @@ function App() {
             </button>
             <button
               onClick={() => setActiveTab('query')}
-              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              className={`py-2 px-2 sm:px-3 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap ${
                 activeTab === 'query'
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -211,7 +213,7 @@ function App() {
             </button>
             <button
               onClick={() => setActiveTab('functions')}
-              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              className={`py-2 px-2 sm:px-3 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap ${
                 activeTab === 'functions'
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -221,7 +223,7 @@ function App() {
             </button>
             <button
               onClick={() => setActiveTab('data')}
-              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              className={`py-2 px-2 sm:px-3 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap ${
                 activeTab === 'data'
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -231,7 +233,7 @@ function App() {
             </button>
             <button
               onClick={() => setActiveTab('mappings')}
-              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              className={`py-2 px-2 sm:px-3 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap ${
                 activeTab === 'mappings'
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
